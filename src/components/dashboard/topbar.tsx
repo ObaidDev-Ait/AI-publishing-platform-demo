@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import {
@@ -15,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface TopbarProps {
   title: string;
@@ -22,11 +25,43 @@ interface TopbarProps {
 }
 
 export function Topbar({ title, subtitle }: TopbarProps) {
+  const [user, setUser] = useState<{ name: string; avatarUrl: string | null } | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function getProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setUser({ name: data.name, avatarUrl: data.avatarUrl });
+        }
+      } catch (err) {
+        console.error("Failed to load user info in Topbar", err);
+      }
+    }
+    getProfile();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        toast.success("Signed out successfully");
+        router.push("/login");
+      } else {
+        toast.error("Logout failed");
+      }
+    } catch (err) {
+      toast.error("An error occurred during sign out");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="flex items-center justify-between h-full px-6">
         {/* Left: Title */}
-        <div>
+        <div className="pl-10 md:pl-0">
           <h1 className="text-lg font-semibold font-heading">{title}</h1>
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         </div>
@@ -62,9 +97,15 @@ export function Topbar({ title, subtitle }: TopbarProps) {
               }
             >
               <Avatar className="h-7 w-7">
-                <AvatarFallback className="gradient-bg text-white text-xs">SC</AvatarFallback>
+                {user?.avatarUrl ? (
+                  <AvatarImage src={user.avatarUrl} alt={user.name} />
+                ) : (
+                  <AvatarFallback className="gradient-bg text-white text-xs">
+                    {user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase() : "SC"}
+                  </AvatarFallback>
+                )}
               </Avatar>
-              <span className="hidden lg:inline text-sm font-medium">Sarah Chen</span>
+              <span className="hidden lg:inline text-sm font-medium">{user?.name || "Sarah Chen"}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
@@ -76,7 +117,7 @@ export function Topbar({ title, subtitle }: TopbarProps) {
                 Billing
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem render={<Link href="/" />}>
+              <DropdownMenuItem render={<button type="button" onClick={handleSignOut} className="w-full text-left" />}>
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>

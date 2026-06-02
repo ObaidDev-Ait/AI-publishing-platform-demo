@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,46 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Camera, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<any>({
+    name: "",
+    email: "",
+    bio: "",
+    website: "",
+    rank: "",
+    earnings: 0,
+    articles: 0,
+    joinDate: "",
+  });
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        if (!res.ok) {
+          throw new Error("Failed to load profile");
+        }
+        const data = await res.json();
+        setProfile(data);
+        if (data.avatarUrl) {
+          setAvatarUrl(data.avatarUrl);
+        }
+      } catch (err: any) {
+        toast.error("Could not load profile from server");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -32,17 +66,60 @@ export default function ProfilePage() {
       reader.onload = (event) => {
         const result = event.target?.result as string;
         setAvatarUrl(result);
-        toast.success("Photo updated successfully!");
+        toast.success("Photo updated! Click 'Save Changes' to persist.");
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.name,
+          bio: profile.bio,
+          website: profile.website,
+          avatarUrl: avatarUrl,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save profile");
+      }
+      toast.success("Profile saved successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6 max-w-4xl space-y-6">
+        <div className="h-10 w-48 bg-muted rounded animate-pulse" />
+        <Card className="border-border/50">
+          <CardContent className="p-6 flex items-center gap-6">
+            <div className="h-20 w-20 rounded-full bg-muted animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+              <div className="h-3 w-48 bg-muted rounded animate-pulse" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <>
       <Topbar title="Profile" subtitle="Manage your account settings" />
 
-      <div className="p-6 space-y-6 max-w-4xl">
+      <div className="p-4 sm:p-6 space-y-6 max-w-4xl">
         {/* Profile picture */}
         <Card className="border-border/50">
           <CardHeader>
@@ -60,9 +137,11 @@ export default function ProfilePage() {
                 />
                 <Avatar className="h-20 w-20 border-4 border-violet/20">
                   {avatarUrl ? (
-                    <AvatarImage src={avatarUrl} alt="Sarah Chen" />
+                    <AvatarImage src={avatarUrl} alt={profile.name} />
                   ) : (
-                    <AvatarFallback className="gradient-bg text-white text-2xl font-bold">SC</AvatarFallback>
+                    <AvatarFallback className="gradient-bg text-white text-2xl font-bold">
+                      {profile.name ? profile.name.split(" ").map((n: string) => n[0]).join("").toUpperCase() : "SC"}
+                    </AvatarFallback>
                   )}
                 </Avatar>
                 <div
@@ -73,9 +152,20 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium">Sarah Chen</p>
-                <p className="text-xs text-muted-foreground">Publisher since August 2025</p>
-                <Button variant="outline" size="sm" className="mt-2" onClick={handleUploadClick}>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">{profile.name}</p>
+                  <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[10px] py-0 px-1.5 font-semibold">
+                    {profile.rank}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {profile.joinDate ? `Publisher since ${new Date(profile.joinDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}` : ""}
+                </p>
+                <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                  <span>Earnings: <strong className="text-foreground">${profile.earnings.toLocaleString()}</strong></span>
+                  <span>Articles: <strong className="text-foreground">{profile.articles}</strong></span>
+                </div>
+                <Button variant="outline" size="sm" className="mt-3" onClick={handleUploadClick}>
                   Upload Photo
                 </Button>
               </div>
@@ -88,35 +178,55 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="text-base font-heading">Personal Information</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <CardContent>
+            <form onSubmit={handleSave} className="space-y-4">
               <div className="space-y-2">
-                <Label>First Name</Label>
-                <Input defaultValue="Sarah" className="h-11" />
+                <Label>Full Name</Label>
+                <Input
+                  value={profile.name}
+                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                  className="h-11"
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label>Last Name</Label>
-                <Input defaultValue="Chen" className="h-11" />
+                <Label>Email</Label>
+                <Input
+                  value={profile.email}
+                  disabled
+                  type="email"
+                  className="h-11 bg-muted/30 cursor-not-allowed"
+                />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input defaultValue="sarah@contentflow.ai" type="email" className="h-11" />
-            </div>
-            <div className="space-y-2">
-              <Label>Bio</Label>
-              <Textarea
-                defaultValue="Tech blogger and digital content creator with 5+ years of experience in the AI and technology space."
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Website</Label>
-              <Input defaultValue="https://sarahchen.blog" className="h-11" />
-            </div>
-            <Button className="gradient-bg text-white" onClick={() => toast.success("Profile updated!")}>
-              <Save className="h-4 w-4 mr-2" /> Save Changes
-            </Button>
+              <div className="space-y-2">
+                <Label>Bio</Label>
+                <Textarea
+                  value={profile.bio || ""}
+                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Website</Label>
+                <Input
+                  value={profile.website || ""}
+                  onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                  className="h-11"
+                />
+              </div>
+              <Button type="submit" className="gradient-bg text-white" disabled={saving}>
+                {saving ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Changes
+                  </>
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
 

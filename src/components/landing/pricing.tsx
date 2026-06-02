@@ -1,14 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { pricingPlans } from "@/lib/mock-data";
+import { landingService } from "@frontend/services/landing.service";
 
 export function Pricing() {
   const [annual, setAnnual] = useState(false);
+  const [pricingPlans, setPricingPlans] = useState<
+    {
+      name: string;
+      price: { monthly: number; yearly: number };
+      description: string;
+      features: { text: string; included: boolean }[];
+      cta: string;
+      popular: boolean;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    landingService.getContent().then((data) => setPricingPlans(data.pricingPlans as typeof pricingPlans));
+  }, []);
 
   return (
     <section id="pricing" className="py-24 sm:py-32 relative">

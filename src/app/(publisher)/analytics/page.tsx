@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { monthlyRevenue, weeklyTraffic, trafficByCountry } from "@/lib/mock-data";
+import { analyticsService } from "@frontend/services/analytics.service";
 import {
   AreaChart,
   Area,
@@ -16,14 +17,46 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { toast } from "sonner";
 
 export default function AnalyticsPage() {
+  const [monthlyRevenue, setMonthlyRevenue] = useState<
+    { month: string; revenue: number; clicks: number }[]
+  >([]);
+  const [weeklyTraffic, setWeeklyTraffic] = useState<
+    { day: string; organic: number; direct: number; referral: number }[]
+  >([]);
+  const [trafficByCountry, setTrafficByCountry] = useState<
+    { country: string; visitors: number; percentage: number }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    analyticsService
+      .getPublisherAnalytics()
+      .then((data) => {
+        setMonthlyRevenue(data.monthlyRevenue as typeof monthlyRevenue);
+        setWeeklyTraffic(data.weeklyTraffic as typeof weeklyTraffic);
+        setTrafficByCountry(data.trafficByCountry as typeof trafficByCountry);
+      })
+      .catch(() => toast.error("Failed to load analytics"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Topbar title="Analytics" subtitle="Loading metrics..." />
+        <div className="p-6 text-muted-foreground text-sm">Loading analytics data...</div>
+      </>
+    );
+  }
+
   return (
     <>
       <Topbar title="Analytics" subtitle="Track your traffic and performance metrics" />
 
-      <div className="p-6 space-y-6">
-        {/* Traffic overview */}
+      <div className="p-4 sm:p-6 space-y-6">
         <Card className="border-border/50">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -71,77 +104,49 @@ export default function AnalyticsPage() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top articles */}
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-base font-heading">Top Performing Articles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {monthlyRevenue.slice(0, 6).map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-sm font-semibold">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">Article about {item.month} trends</p>
-                      <p className="text-xs text-muted-foreground">{item.clicks.toLocaleString()} clicks</p>
-                    </div>
-                    <span className="text-sm font-semibold text-green-500">${item.revenue.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Geographic distribution */}
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle className="text-base font-heading">Traffic by Country</CardTitle>
+              <CardTitle className="text-base font-heading">Revenue Trend</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trafficByCountry} layout="vertical">
+                  <BarChart data={monthlyRevenue}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis dataKey="country" type="category" tick={{ fontSize: 11 }} width={100} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "0.5rem",
-                        fontSize: "12px",
-                      }}
-                      formatter={(value: any) => [Number(value).toLocaleString(), "Visitors"]}
-                    />
-                    <Bar dataKey="visitors" fill="hsl(262, 83%, 58%)" radius={[0, 4, 4, 0]} opacity={0.8} />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v / 1000}k`} />
+                    <Tooltip />
+                    <Bar dataKey="revenue" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Device breakdown */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle className="text-base font-heading">Device Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { device: "Desktop", value: 58, icon: "🖥️" },
-                { device: "Mobile", value: 32, icon: "📱" },
-                { device: "Tablet", value: 10, icon: "📟" },
-              ].map((item) => (
-                <div key={item.device} className="p-4 rounded-xl border border-border/50 bg-card text-center">
-                  <span className="text-3xl">{item.icon}</span>
-                  <p className="text-2xl font-bold font-heading mt-2">{item.value}%</p>
-                  <p className="text-sm text-muted-foreground">{item.device}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="text-base font-heading">Traffic by Country</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {trafficByCountry.map((item) => (
+                  <div key={item.country}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>{item.country}</span>
+                      <span className="text-muted-foreground">{item.percentage}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full gradient-bg"
+                        style={{ width: `${item.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );

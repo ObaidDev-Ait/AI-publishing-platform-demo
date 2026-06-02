@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,24 +17,31 @@ import { Search, Ban, CheckCircle, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { users } from "@/lib/mock-data";
+import { adminService } from "@frontend/services/admin.service";
+import type { AdminUser } from "@frontend/types";
 import { toast } from "sonner";
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+
+  useEffect(() => {
+    adminService.getUsers().then(setUsers).catch(() => toast.error("Failed to load users"));
+  }, []);
+
   return (
     <>
       <Topbar title="User Management" subtitle="Manage all platform users" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         <Card className="border-border/50">
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <div className="relative flex-1 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search users..." className="pl-9 h-10" />
+                <Input placeholder="Search users..." className="pl-9 h-10 w-full" />
               </div>
               <Select defaultValue="all">
-                <SelectTrigger className="h-10 w-full sm:w-[150px]">
+                <SelectTrigger className="h-10 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -43,7 +51,7 @@ export default function UsersPage() {
                 </SelectContent>
               </Select>
               <Select defaultValue="all">
-                <SelectTrigger className="h-10 w-full sm:w-[150px]">
+                <SelectTrigger className="h-10 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

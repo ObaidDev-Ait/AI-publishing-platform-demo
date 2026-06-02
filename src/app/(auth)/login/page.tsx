@@ -11,17 +11,56 @@ import { Logo } from "@/components/shared/logo";
 import { toast } from "sonner";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("hamza@example.com");
+  const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
+      }
       toast.success("Login successful! Redirecting...");
-      setTimeout(() => { window.location.href = "/dashboard"; }, 1000);
-    }, 1500);
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
+    } catch (err: any) {
+      toast.error(err.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "hamza@example.com", password: "password123" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+      toast.success("Demo Login successful! Redirecting...");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
+    } catch (err: any) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,7 +85,8 @@ export default function LoginPage() {
                   type="email"
                   placeholder="you@example.com"
                   className="pl-10 h-11"
-                  defaultValue="publisher@contentflow.ai"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -65,7 +105,8 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   className="pl-10 pr-10 h-11"
-                  defaultValue="password123"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
@@ -84,20 +125,32 @@ export default function LoginPage() {
               </Label>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-11 gradient-bg text-white font-semibold shadow-lg shadow-violet/25"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
-                </span>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
+            <div className="space-y-3">
+              <Button
+                type="submit"
+                className="w-full h-11 gradient-bg text-white font-semibold shadow-lg shadow-violet/25"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Signing in...
+                  </span>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11 border-violet/30 text-violet hover:bg-violet/5 hover:text-violet"
+                disabled={loading}
+                onClick={handleDemoLogin}
+              >
+                Demo Login (One-Click)
+              </Button>
+            </div>
           </form>
 
           <div className="my-6 flex items-center gap-4">

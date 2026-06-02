@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,19 +12,38 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, CheckCircle, XCircle, Shield, FileText } from "lucide-react";
 import Link from "next/link";
-import { articles, generatedArticle } from "@/lib/mock-data";
+import { articlesService } from "@frontend/services/articles.service";
+import type { Article } from "@frontend/types";
 import { toast } from "sonner";
 import { use } from "react";
 
 export default function ArticleReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const article = articles.find((a) => a.id === id) || articles[0];
+  const [article, setArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    articlesService
+      .adminGetById(id)
+      .then(setArticle)
+      .catch(() => toast.error("Failed to load article"))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading || !article) {
+    return (
+      <>
+        <Topbar title="Article Review" subtitle="Loading..." />
+        <div className="p-6 text-sm text-muted-foreground">Loading article...</div>
+      </>
+    );
+  }
 
   return (
     <>
       <Topbar title="Article Review" subtitle={article.title} />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         <Link href="/admin/articles" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to articles
         </Link>
@@ -51,7 +71,7 @@ export default function ArticleReviewPage({ params }: { params: Promise<{ id: st
               <CardContent>
                 <article className="prose prose-sm dark:prose-invert max-w-none">
                   <div className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                    {generatedArticle.content}
+                    {article.content ?? article.excerpt}
                   </div>
                 </article>
               </CardContent>
@@ -69,11 +89,11 @@ export default function ArticleReviewPage({ params }: { params: Promise<{ id: st
                 <div className="flex items-center gap-3 mb-4">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-muted text-sm">
-                      {article.author.split(" ").map((n) => n[0]).join("")}
+                      {(article.author ?? "U").split(" ").map((n) => n[0]).join("")}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium">{article.author}</p>
+                    <p className="text-sm font-medium">{article.author ?? "Publisher"}</p>
                     <p className="text-xs text-muted-foreground">Publisher</p>
                   </div>
                 </div>
@@ -106,9 +126,9 @@ export default function ArticleReviewPage({ params }: { params: Promise<{ id: st
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-muted-foreground">Readability</span>
-                    <span className="font-medium">88/100</span>
+                    <span className="font-medium">{article.readability ?? 88}/100</span>
                   </div>
-                  <Progress value={88} className="h-2" />
+                  <Progress value={article.readability ?? 88} className="h-2" />
                 </div>
 
                 <Separator />

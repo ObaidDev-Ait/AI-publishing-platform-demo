@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ export default function PublishersPage() {
     <>
       <Topbar title="Publisher Approval" subtitle="Review and approve publisher applications" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="border-border/50">
@@ -43,7 +44,7 @@ export default function PublishersPage() {
         <div className="space-y-4">
           {publisherApplications.map((app) => (
             <Card key={app.id} className="border-border/50 card-hover">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                   <div className="flex items-center gap-4 flex-1">
                     <Avatar className="h-12 w-12">
@@ -69,7 +70,7 @@ export default function PublishersPage() {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="text-xs">{app.niche}</Badge>
                     {app.status === "pending" ? (
                       <>

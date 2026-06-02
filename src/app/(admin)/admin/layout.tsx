@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { toast } from "sonner";
 
 const adminNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
@@ -33,8 +34,32 @@ const adminNavItems = [
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
 ];
 
-function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+function AdminSidebar({
+  collapsed,
+  onToggle,
+  onItemClick,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+  onItemClick?: () => void;
+}) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        toast.success("Signed out successfully");
+        if (onItemClick) onItemClick();
+        router.push("/login");
+      } else {
+        toast.error("Logout failed");
+      }
+    } catch (err) {
+      toast.error("An error occurred during sign out");
+    }
+  };
 
   return (
     <aside
@@ -72,6 +97,7 @@ function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: (
               href={item.href}
               className={`sidebar-link ${isActive ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
               title={collapsed ? item.label : undefined}
+              onClick={onItemClick}
             >
               <item.icon className="h-5 w-5 shrink-0" />
               {!collapsed && (
@@ -101,11 +127,9 @@ function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: (
             </div>
           )}
           {!collapsed && (
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
@@ -133,7 +157,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-[260px]">
           <SheetTitle className="sr-only">Admin Navigation</SheetTitle>
-          <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
+          <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} onItemClick={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 

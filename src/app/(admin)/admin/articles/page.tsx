@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,16 +10,23 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Search, Eye, CheckCircle, XCircle } from "lucide-react";
-import { articles } from "@/lib/mock-data";
+import { articlesService } from "@frontend/services/articles.service";
+import type { Article } from "@frontend/types";
 import Link from "next/link";
 import { toast } from "sonner";
 
 export default function AdminArticlesPage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+
+  useEffect(() => {
+    articlesService.adminList().then(setArticles).catch(() => toast.error("Failed to load articles"));
+  }, []);
+
   return (
     <>
       <Topbar title="Article Review" subtitle="Review and moderate submitted articles" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         <Card className="border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">

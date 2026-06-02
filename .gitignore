@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large and Generated Files
+scratch/
+ffmpeg-extracted/
+frames1/
+frames2/
+*.zip
+*.db
+*.mp4
+dist/
+temp/
+tmp/

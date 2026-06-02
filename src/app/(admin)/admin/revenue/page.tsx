@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,18 +8,28 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { DollarSign, TrendingUp, Users, CreditCard } from "lucide-react";
-import { users } from "@/lib/mock-data";
+import { adminService } from "@frontend/services/admin.service";
+import type { AdminUser } from "@frontend/types";
+import { toast } from "sonner";
 
 export default function RevenuePage() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+
+  useEffect(() => {
+    adminService.getRevenue().then(setUsers).catch(() => toast.error("Failed to load revenue data"));
+  }, []);
+
+  const totalRevenue = users.reduce((sum, u) => sum + u.revenue, 0);
+
   return (
     <>
       <Topbar title="Revenue Management" subtitle="Track and manage platform revenue" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Overview cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { title: "Total Revenue", value: "$284,600", icon: DollarSign, color: "text-green-500" },
+            { title: "Total Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-green-500" },
             { title: "Platform Commission", value: "$42,690", icon: TrendingUp, color: "text-violet" },
             { title: "Publisher Payouts", value: "$241,910", icon: Users, color: "text-blue-500" },
             { title: "Pending Payouts", value: "$12,450", icon: CreditCard, color: "text-yellow-500" },

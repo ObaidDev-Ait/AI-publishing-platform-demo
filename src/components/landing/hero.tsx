@@ -1,10 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function Hero() {
+  const [isOpen, setIsOpen] = useState(false);
+  const demoVideoUrl = "/video1.mp4";
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background effects */}
@@ -51,7 +62,8 @@ export function Hero() {
           <Button
             size="lg"
             variant="outline"
-            className="font-semibold text-base px-8 h-12 group"
+            className="font-semibold text-base px-8 h-12 group cursor-pointer"
+            onClick={() => setIsOpen(true)}
           >
             <Play className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
             Watch Demo
@@ -117,6 +129,25 @@ export function Hero() {
             </div>
           </div>
         </div>
+        {/* Demo Video Modal */}
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="sm:max-w-3xl p-0 overflow-hidden border-border/50 bg-black">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Demo Video</DialogTitle>
+              <DialogDescription>Watch the demo video of AI Publishing Platform</DialogDescription>
+            </DialogHeader>
+            {isOpen && (
+              <div className="relative aspect-video w-full bg-black">
+                <video
+                  src={demoVideoUrl}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   );

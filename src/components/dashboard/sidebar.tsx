@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Sparkles,
@@ -14,9 +15,10 @@ import {
   LogOut,
 } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -31,10 +33,43 @@ const navItems = [
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  onItemClick?: () => void;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, onItemClick }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<{ name: string; avatarUrl: string | null } | null>(null);
+
+  useEffect(() => {
+    async function getProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setUser({ name: data.name, avatarUrl: data.avatarUrl });
+        }
+      } catch (err) {
+        console.error("Failed to load user info in Sidebar", err);
+      }
+    }
+    getProfile();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        toast.success("Signed out successfully");
+        if (onItemClick) onItemClick();
+        router.push("/login");
+      } else {
+        toast.error("Logout failed");
+      }
+    } catch (err) {
+      toast.error("An error occurred during sign out");
+    }
+  };
 
   return (
     <aside
@@ -67,6 +102,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               href={item.href}
               className={`sidebar-link ${isActive ? "active" : ""} ${collapsed ? "justify-center px-2" : ""}`}
               title={collapsed ? item.label : undefined}
+              onClick={onItemClick}
             >
               <item.icon className="h-5 w-5 shrink-0" />
               {!collapsed && <span>{item.label}</span>}
@@ -79,20 +115,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="p-3 border-t border-sidebar-border">
         <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
           <Avatar className="h-9 w-9 border-2 border-violet/20 shrink-0">
-            <AvatarFallback className="gradient-bg text-white text-xs font-semibold">SC</AvatarFallback>
+            {user?.avatarUrl ? (
+              <AvatarImage src={user.avatarUrl} alt={user.name} />
+            ) : (
+              <AvatarFallback className="gradient-bg text-white text-xs font-semibold">
+                {user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase() : "SC"}
+              </AvatarFallback>
+            )}
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">Sarah Chen</p>
+              <p className="text-sm font-medium truncate">{user?.name || "Sarah Chen"}</p>
               <p className="text-xs text-muted-foreground truncate">Publisher</p>
             </div>
           )}
           {!collapsed && (
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>

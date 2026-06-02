@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,8 @@ import {
   TrendingDown,
   ArrowUpRight,
 } from "lucide-react";
-import { publisherStats, monthlyRevenue, articles } from "@/lib/mock-data";
+import { statsService } from "@frontend/services/stats.service";
+import type { PublisherStats } from "@frontend/types";
 import {
   AreaChart,
   Area,
@@ -24,40 +26,88 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Link from "next/link";
-
-const statCards = [
-  {
-    title: "Total Revenue",
-    value: `$${publisherStats.totalRevenue.toLocaleString()}`,
-    change: publisherStats.revenueChange,
-    icon: DollarSign,
-  },
-  {
-    title: "Total Articles",
-    value: publisherStats.totalArticles.toString(),
-    change: publisherStats.articlesChange,
-    icon: FileText,
-  },
-  {
-    title: "Total Clicks",
-    value: `${(publisherStats.totalClicks / 1000).toFixed(1)}K`,
-    change: publisherStats.clicksChange,
-    icon: MousePointerClick,
-  },
-  {
-    title: "Avg. CPC",
-    value: `$${publisherStats.avgCPC.toFixed(2)}`,
-    change: publisherStats.cpcChange,
-    icon: TrendingUp,
-  },
-];
+import { toast } from "sonner";
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<PublisherStats | null>(null);
+  const [recentArticles, setRecentArticles] = useState<
+    { id: string; title: string; category: string; status: string; date: string; clicks: number }[]
+  >([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<{ month: string; revenue: number; clicks: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        const statsData = await statsService.getPublisherStats();
+        setStats(statsData);
+        setMonthlyRevenue(statsData.monthlyRevenue ?? []);
+
+        const { articlesService } = await import("@frontend/services/articles.service");
+        const articlesData = await articlesService.list();
+        setRecentArticles(articlesData);
+      } catch {
+        toast.error("Could not fetch dashboard statistics");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Topbar title="Dashboard" subtitle="Loading your workspace..." />
+        <div className="p-4 sm:p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="border-border/50">
+                <CardContent className="p-5 space-y-3">
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                  <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+                  <div className="h-3 w-40 bg-muted rounded animate-pulse" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  const statCards = [
+    {
+      title: "Total Revenue",
+      value: `$${stats?.earnings.toLocaleString()}`,
+      change: 12.5,
+      icon: DollarSign,
+    },
+    {
+      title: "Articles Published",
+      value: stats?.articles.toString(),
+      change: 8.2,
+      icon: FileText,
+    },
+    {
+      title: "Total Clicks",
+      value: stats?.clicks.toLocaleString(),
+      change: 18.1,
+      icon: MousePointerClick,
+    },
+    {
+      title: "Approval Rate",
+      value: `${stats?.approvalRate}%`,
+      change: 0.4,
+      icon: TrendingUp,
+    },
+  ];
+
   return (
     <>
-      <Topbar title="Dashboard" subtitle="Welcome back, Sarah! Here's your overview." />
+      <Topbar title="Dashboard" subtitle="Welcome back! Here's your overview." />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((stat, index) => (
@@ -183,46 +233,55 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {articles.slice(0, 5).map((article) => (
-                <div
-                  key={article.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0 mr-4">
-                    <p className="text-sm font-medium truncate">{article.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground">{article.category}</span>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <span className="text-xs text-muted-foreground">{article.date}</span>
+              {recentArticles.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground">No articles generated yet.</p>
+                  <Link href="/ai-generator" className="text-xs text-violet hover:underline mt-1 inline-block">
+                    Create your first article now →
+                  </Link>
+                </div>
+              ) : (
+                recentArticles.slice(0, 5).map((article) => (
+                  <div
+                    key={article.id}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0 mr-4">
+                      <p className="text-sm font-medium truncate">{article.title}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">{article.category}</span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">{article.date}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant={
+                          article.status === "approved"
+                            ? "default"
+                            : article.status === "pending"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                        className={`text-xs ${
+                          article.status === "approved"
+                            ? "bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20"
+                            : article.status === "pending"
+                            ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/20"
+                            : "bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                        }`}
+                      >
+                        {article.status}
+                      </Badge>
+                      {article.clicks > 0 && (
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {article.clicks.toLocaleString()} clicks
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      variant={
-                        article.status === "approved"
-                          ? "default"
-                          : article.status === "pending"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                      className={`text-xs ${
-                        article.status === "approved"
-                          ? "bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20"
-                          : article.status === "pending"
-                          ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/20"
-                          : "bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
-                      }`}
-                    >
-                      {article.status}
-                    </Badge>
-                    {article.clicks > 0 && (
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {article.clicks.toLocaleString()} clicks
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

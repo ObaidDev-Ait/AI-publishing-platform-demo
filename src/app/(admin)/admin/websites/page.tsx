@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,21 +14,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Globe, Plus, RefreshCw, ExternalLink, Wifi, WifiOff, AlertTriangle } from "lucide-react";
-import { wordPressSites } from "@/lib/mock-data";
+import { adminService } from "@frontend/services/admin.service";
 import { toast } from "sonner";
 
-const statusIcons = {
+const statusIcons: Record<string, React.ReactNode> = {
   active: <Wifi className="h-4 w-4 text-green-500" />,
   inactive: <WifiOff className="h-4 w-4 text-muted-foreground" />,
   error: <AlertTriangle className="h-4 w-4 text-red-500" />,
 };
 
 export default function WebsitesPage() {
+  const [wordPressSites, setWordPressSites] = useState<
+    { id: string; name: string; url: string; status: string; articles: number; traffic: number; lastSync: string }[]
+  >([]);
+
+  useEffect(() => {
+    adminService
+      .getWordPressSites()
+      .then((data) => setWordPressSites(data as typeof wordPressSites))
+      .catch(() => toast.error("Failed to load WordPress sites"));
+  }, []);
+
   return (
     <>
       <Topbar title="WordPress Websites" subtitle="Manage connected WordPress sites" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="border-border/50">

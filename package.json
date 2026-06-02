@@ -4,12 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate --schema=backend/prisma/schema.prisma && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "prisma generate --schema=backend/prisma/schema.prisma",
+    "db:push": "prisma db push --schema=backend/prisma/schema.prisma",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset --schema=backend/prisma/schema.prisma --force"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@prisma/client": "^6.19.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
@@ -30,7 +35,12 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "prisma": {
+    "schema": "backend/prisma/schema.prisma",
+    "seed": "npx tsx backend/prisma/seed.ts"
   }
 }

@@ -1,20 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { adminRevenueByMonth, contentCategories } from "@/lib/mock-data";
+import { analyticsService } from "@frontend/services/analytics.service";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
+import { toast } from "sonner";
 
 export default function AdminAnalyticsPage() {
+  const [adminRevenueByMonth, setAdminRevenueByMonth] = useState<{ month: string; revenue: number; publishers: number }[]>([]);
+  const [contentCategories, setContentCategories] = useState<{ name: string; value: number; color: string }[]>([]);
+
+  useEffect(() => {
+    analyticsService
+      .getAdminAnalytics()
+      .then((data) => {
+        setAdminRevenueByMonth(data.adminRevenueByMonth as typeof adminRevenueByMonth);
+        setContentCategories(data.contentCategories as typeof contentCategories);
+      })
+      .catch(() => toast.error("Failed to load analytics"));
+  }, []);
+
   return (
     <>
       <Topbar title="Platform Analytics" subtitle="Comprehensive platform metrics and insights" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Multi-metric chart */}
         <Card className="border-border/50">
           <CardHeader>

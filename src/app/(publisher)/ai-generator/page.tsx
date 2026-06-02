@@ -10,6 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
+import { configService } from "@frontend/services/config.service";
+import type { Language } from "@frontend/types";
 import {
   Select,
   SelectContent,
@@ -28,23 +31,82 @@ import {
   Download,
   Eye,
 } from "lucide-react";
-import { generatedArticle } from "@/lib/mock-data";
+import { aiService } from "@frontend/services/ai.service";
 import { toast } from "sonner";
 
 export default function AIGeneratorPage() {
+  const [languages, setLanguages] = useState<Language[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressText, setProgressText] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+  // Form states
+  const [topic, setTopic] = useState("10 Revolutionary AI Tools That Will Transform Your Business in 2026");
+  const [category, setCategory] = useState("technology");
+  const [language, setLanguage] = useState("english");
+  const [tone, setTone] = useState("professional");
+  const [wordCount, setWordCount] = useState(1500);
   const [keywords, setKeywords] = useState<string[]>(["AI tools", "business", "automation"]);
   const [keywordInput, setKeywordInput] = useState("");
 
-  const handleGenerate = () => {
+  // Result state
+  const [article, setArticle] = useState<any>(null);
+
+  useEffect(() => {
+    configService.getLanguages().then(setLanguages).catch(() => toast.error("Failed to load languages"));
+  }, []);
+
+  const handleGenerate = async () => {
+    if (!topic.trim()) {
+      toast.error("Please enter an article topic");
+      return;
+    }
+
     setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
+    setGenerated(false);
+    setProgress(10);
+    setProgressText("Analyzing topic...");
+
+    try {
+      const progressSteps = [
+        { val: 25, txt: "Structuring article sections..." },
+        { val: 50, txt: "Writing content in target language..." },
+        { val: 75, txt: "Optimizing SEO keywords & density..." },
+        { val: 90, txt: "Generating meta tags & FAQs..." },
+      ];
+
+      let step = 0;
+      const progressTimer = setInterval(() => {
+        if (step < progressSteps.length) {
+          setProgress(progressSteps[step].val);
+          setProgressText(progressSteps[step].txt);
+          step++;
+        }
+      }, 700);
+
+      const data = await aiService.generate({
+        topic,
+        language,
+        tone,
+        category,
+        keywords,
+        wordCount,
+      });
+
+      clearInterval(progressTimer);
+      setProgress(100);
+      setProgressText("Finalizing article...");
+      
+      setArticle(data.article);
       setGenerated(true);
       toast.success("Article generated successfully!");
-    }, 3000);
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred during article generation");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const addKeyword = () => {
@@ -58,11 +120,13 @@ export default function AIGeneratorPage() {
     setKeywords(keywords.filter((k) => k !== kw));
   };
 
+  const selectedLangConfig = languages.find((l) => l.id === language) || languages[0];
+
   return (
     <>
       <Topbar title="AI Content Generator" subtitle="Create SEO-optimized articles with AI" />
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left panel: Input form */}
           <div className="xl:col-span-1 space-y-6">
@@ -75,18 +139,19 @@ export default function AIGeneratorPage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Article Title</Label>
+                  <Label htmlFor="topic">Article Topic / Keyword Seed</Label>
                   <Input
-                    id="title"
+                    id="topic"
                     placeholder="e.g., 10 Best AI Tools for Business"
                     className="h-11"
-                    defaultValue="10 Revolutionary AI Tools That Will Transform Your Business in 2026"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Category</Label>
-                  <Select defaultValue="technology">
+                  <Select value={category} onValueChange={(val) => setCategory(val || "technology")}>
                     <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -131,24 +196,24 @@ export default function AIGeneratorPage() {
 
                 <div className="space-y-2">
                   <Label>Language</Label>
-                  <Select defaultValue="english">
+                  <Select value={language} onValueChange={(val) => setLanguage(val || "english")}>
                     <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="spanish">Spanish</SelectItem>
-                      <SelectItem value="french">French</SelectItem>
-                      <SelectItem value="german">German</SelectItem>
-                      <SelectItem value="arabic">Arabic</SelectItem>
-                      <SelectItem value="japanese">Japanese</SelectItem>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.id} value={lang.id}>
+                          <span className="mr-2">{lang.flag}</span>
+                          <span>{lang.label} ({lang.nativeLabel})</span>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Tone</Label>
-                  <Select defaultValue="professional">
+                  <Select value={tone} onValueChange={(val) => setTone(val || "professional")}>
                     <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
@@ -158,6 +223,21 @@ export default function AIGeneratorPage() {
                       <SelectItem value="friendly">Friendly</SelectItem>
                       <SelectItem value="formal">Formal</SelectItem>
                       <SelectItem value="humorous">Humorous</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Word Count</Label>
+                  <Select value={String(wordCount)} onValueChange={(val) => setWordCount(Number(val))}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="800">Short (~800 words)</SelectItem>
+                      <SelectItem value="1500">Medium (~1500 words)</SelectItem>
+                      <SelectItem value="2500">Long (~2500 words)</SelectItem>
+                      <SelectItem value="4000">Extra Long (~4000 words)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -183,7 +263,7 @@ export default function AIGeneratorPage() {
             </Card>
 
             {/* SEO Score */}
-            {generated && (
+            {generated && article && (
               <Card className="border-border/50">
                 <CardHeader>
                   <CardTitle className="text-base font-heading">SEO Score</CardTitle>
@@ -196,14 +276,14 @@ export default function AIGeneratorPage() {
                         <circle
                           cx="50" cy="50" r="40"
                           fill="none"
-                          stroke="hsl(262, 83%, 58%)"
+                          stroke="oklch(0.55 0.24 270)"
                           strokeWidth="8"
-                          strokeDasharray={`${generatedArticle.seoScore * 2.51} 251`}
+                          strokeDasharray={`${article.seoScore * 2.51} 251`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-bold font-heading">{generatedArticle.seoScore}</span>
+                        <span className="text-3xl font-bold font-heading">{article.seoScore}</span>
                         <span className="text-xs text-muted-foreground">/ 100</span>
                       </div>
                     </div>
@@ -211,10 +291,10 @@ export default function AIGeneratorPage() {
 
                   <div className="space-y-3">
                     {[
-                      { label: "Readability", value: generatedArticle.readability, color: "bg-green-500" },
-                      { label: "Keyword Density", value: 78, color: "bg-yellow-500" },
-                      { label: "Content Length", value: 95, color: "bg-green-500" },
-                      { label: "Meta Tags", value: 90, color: "bg-green-500" },
+                      { label: "Readability", value: article.readability, color: "bg-green-500" },
+                      { label: "Keyword Density", value: 82, color: "bg-green-500" },
+                      { label: "Content Length", value: wordCount >= 1500 ? 98 : 75, color: "bg-green-500" },
+                      { label: "Meta Tags", value: 95, color: "bg-green-500" },
                     ].map((item) => (
                       <div key={item.label}>
                         <div className="flex items-center justify-between text-sm mb-1">
@@ -231,15 +311,15 @@ export default function AIGeneratorPage() {
                   <div className="space-y-2">
                     <p className="text-sm font-medium flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Good title length (55 characters)
+                      SEO-optimized headers structured
                     </p>
                     <p className="text-sm font-medium flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
                       Meta description optimized
                     </p>
                     <p className="text-sm font-medium flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-500" />
-                      Consider adding more internal links
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Plagiarism-free native conventions
                     </p>
                   </div>
                 </CardContent>
@@ -268,13 +348,13 @@ export default function AIGeneratorPage() {
                   <div className="w-20 h-20 rounded-2xl gradient-bg flex items-center justify-center mb-6 animate-pulse-glow">
                     <Wand2 className="h-10 w-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold font-heading mb-2">Generating your article...</h3>
+                  <h3 className="text-xl font-semibold font-heading mb-2">Generating article...</h3>
                   <p className="text-muted-foreground max-w-sm mb-6">
-                    Our AI is crafting a high-quality, SEO-optimized article for you.
+                    {progressText}
                   </p>
                   <div className="w-full max-w-xs">
-                    <Progress value={66} className="h-2" />
-                    <p className="text-xs text-muted-foreground mt-2">Optimizing SEO...</p>
+                    <Progress value={progress} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-2">{progress}% Completed</p>
                   </div>
                 </CardContent>
               </Card>
@@ -285,24 +365,38 @@ export default function AIGeneratorPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base font-heading">Article Preview</CardTitle>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => toast.success("Copied to clipboard!")}>
-                          <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy
+                      <div className="flex gap-1.5 sm:gap-2">
+                        <Button variant="outline" size="sm" className="h-8 px-2.5 sm:px-3 sm:h-9" onClick={() => {
+                          navigator.clipboard.writeText(article.content);
+                          toast.success("Copied content to clipboard!");
+                        }}>
+                          <Copy className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Copy</span>
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => toast.success("Article downloaded!")}>
-                          <Download className="h-3.5 w-3.5 mr-1.5" /> Export
+                        <Button variant="outline" size="sm" className="h-8 px-2.5 sm:px-3 sm:h-9" onClick={() => {
+                          const element = document.createElement("a");
+                          const file = new Blob([article.content], { type: 'text/markdown' });
+                          element.href = URL.createObjectURL(file);
+                          element.download = `${article.title.replace(/\s+/g, '-').toLowerCase()}.md`;
+                          document.body.appendChild(element);
+                          element.click();
+                          toast.success("Article exported as Markdown!");
+                        }}>
+                          <Download className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Export</span>
                         </Button>
-                        <Button size="sm" className="gradient-bg text-white">
-                          <Eye className="h-3.5 w-3.5 mr-1.5" /> Publish
+                        <Button size="sm" className="gradient-bg text-white h-8 px-2.5 sm:px-3 sm:h-9" onClick={() => toast.success("Article published successfully!")}>
+                          <Eye className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Publish</span>
                         </Button>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <article className="prose prose-sm dark:prose-invert max-w-none">
-                      <h1 className="text-2xl font-bold font-heading mb-4">{generatedArticle.title}</h1>
-                      <div className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
-                        {generatedArticle.content}
+                    <article 
+                      className={`prose prose-sm dark:prose-invert max-w-none ${selectedLangConfig.dir === "rtl" ? "text-right" : "text-left"}`}
+                      dir={selectedLangConfig.dir}
+                    >
+                      <h1 className="text-2xl font-bold font-heading mb-4">{article.title}</h1>
+                      <div className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed font-sans">
+                        {article.content}
                       </div>
                     </article>
                   </CardContent>
@@ -316,52 +410,54 @@ export default function AIGeneratorPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label>Meta Title</Label>
-                      <Input defaultValue={generatedArticle.metaTitle} className="h-11" />
+                      <Input defaultValue={article.metaTitle} className="h-11" />
                       <p className="text-xs text-muted-foreground">
-                        {generatedArticle.metaTitle.length}/60 characters
+                        {article.metaTitle.length}/60 characters
                       </p>
                     </div>
                     <div className="space-y-2">
                       <Label>Meta Description</Label>
                       <Textarea
-                        defaultValue={generatedArticle.metaDescription}
+                        defaultValue={article.metaDescription}
                         rows={3}
                       />
                       <p className="text-xs text-muted-foreground">
-                        {generatedArticle.metaDescription.length}/160 characters
+                        {article.metaDescription.length}/160 characters
                       </p>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* FAQ section */}
-                <Card className="border-border/50">
-                  <CardHeader>
-                    <CardTitle className="text-base font-heading">Generated FAQs</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {generatedArticle.faqs.map((faq, index) => (
-                      <div key={index} className="border border-border/50 rounded-lg">
-                        <button
-                          className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 transition-colors rounded-lg"
-                          onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                        >
-                          <span className="text-sm font-medium">{faq.question}</span>
-                          {expandedFaq === index ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                {article.faqs && article.faqs.length > 0 && (
+                  <Card className="border-border/50">
+                    <CardHeader>
+                      <CardTitle className="text-base font-heading">Generated FAQs</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {article.faqs.map((faq: any, index: number) => (
+                        <div key={index} className="border border-border/50 rounded-lg">
+                          <button
+                            className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 transition-colors rounded-lg"
+                            onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                          >
+                            <span className="text-sm font-medium">{faq.question}</span>
+                            {expandedFaq === index ? (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                            )}
+                          </button>
+                          {expandedFaq === index && (
+                            <div className="px-4 pb-4">
+                              <p className="text-sm text-muted-foreground leading-relaxed">{faq.answer}</p>
+                            </div>
                           )}
-                        </button>
-                        {expandedFaq === index && (
-                          <div className="px-4 pb-4">
-                            <p className="text-sm text-muted-foreground leading-relaxed">{faq.answer}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
           </div>

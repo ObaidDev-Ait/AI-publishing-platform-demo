@@ -1,10 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
-import { testimonials } from "@/lib/mock-data";
+import { landingService } from "@frontend/services/landing.service";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function Testimonials() {
+  const [testimonials, setTestimonials] = useState<
+    { name: string; role: string; avatar: string; quote: string; rating: number }[]
+  >([]);
+
+  useEffect(() => {
+    landingService.getContent().then((data) => setTestimonials(data.testimonials));
+  }, []);
+
   return (
     <section id="testimonials" className="py-24 sm:py-32 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

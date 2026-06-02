@@ -1,27 +1,53 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Users, FileText, Clock, TrendingUp, TrendingDown } from "lucide-react";
-import { adminStats, adminRevenueByMonth } from "@/lib/mock-data";
+import { statsService } from "@frontend/services/stats.service";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-
-const stats = [
-  { title: "Total Revenue", value: `$${(adminStats.totalRevenue / 1000).toFixed(1)}K`, change: adminStats.revenueChange, icon: DollarSign, color: "text-green-500" },
-  { title: "Active Publishers", value: adminStats.activePublishers.toString(), change: adminStats.publishersChange, icon: Users, color: "text-blue-500" },
-  { title: "Total Articles", value: adminStats.totalArticles.toLocaleString(), change: adminStats.articlesChange, icon: FileText, color: "text-violet" },
-  { title: "Pending Reviews", value: adminStats.pendingReviews.toString(), change: adminStats.reviewsChange, icon: Clock, color: "text-yellow-500" },
-];
+import { toast } from "sonner";
 
 export default function AdminDashboardPage() {
+  const [adminStats, setAdminStats] = useState<Record<string, number>>({});
+  const [adminRevenueByMonth, setAdminRevenueByMonth] = useState<{ month: string; revenue: number; publishers: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    statsService
+      .getAdminStats()
+      .then((data) => {
+        setAdminStats(data as Record<string, number>);
+        setAdminRevenueByMonth((data.adminRevenueByMonth as typeof adminRevenueByMonth) ?? []);
+      })
+      .catch(() => toast.error("Failed to load admin dashboard"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const stats = [
+    { title: "Total Revenue", value: `$${((adminStats.totalRevenue ?? 0) / 1000).toFixed(1)}K`, change: adminStats.revenueChange ?? 0, icon: DollarSign, color: "text-green-500" },
+    { title: "Active Publishers", value: (adminStats.activePublishers ?? 0).toString(), change: adminStats.publishersChange ?? 0, icon: Users, color: "text-blue-500" },
+    { title: "Total Articles", value: (adminStats.totalArticles ?? 0).toLocaleString(), change: adminStats.articlesChange ?? 0, icon: FileText, color: "text-violet" },
+    { title: "Pending Reviews", value: (adminStats.pendingReviews ?? 0).toString(), change: adminStats.reviewsChange ?? 0, icon: Clock, color: "text-yellow-500" },
+  ];
+
+  if (loading) {
+    return (
+      <>
+        <Topbar title="Admin Dashboard" subtitle="Loading..." />
+        <div className="p-6 text-sm text-muted-foreground">Loading dashboard...</div>
+      </>
+    );
+  }
+
   return (
     <>
       <Topbar title="Admin Dashboard" subtitle="Platform overview and management" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <Card key={stat.title} className="card-hover border-border/50">

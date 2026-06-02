@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,15 +14,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Wallet, ArrowDownToLine, CreditCard, DollarSign } from "lucide-react";
-import { payouts } from "@/lib/mock-data";
+import { payoutsService } from "@frontend/services/payouts.service";
+import { profileService } from "@frontend/services/profile.service";
+import type { Payout } from "@frontend/types";
 import { toast } from "sonner";
 
 export default function PayoutsPage() {
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [earnings, setEarnings] = useState(0);
+
+  useEffect(() => {
+    Promise.all([payoutsService.list(), profileService.get()])
+      .then(([payoutData, profile]) => {
+        setPayouts(payoutData);
+        setEarnings(profile.earnings);
+      })
+      .catch(() => toast.error("Failed to load payout data"));
+  }, []);
+
   return (
     <>
       <Topbar title="Payouts" subtitle="Manage your earnings and withdrawals" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Balance cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="border-border/50 card-hover">
@@ -30,7 +45,7 @@ export default function PayoutsPage() {
                 <span className="text-sm text-muted-foreground">Available Balance</span>
                 <Wallet className="h-5 w-5 text-violet" />
               </div>
-              <p className="text-3xl font-bold font-heading">$4,280.00</p>
+              <p className="text-3xl font-bold font-heading">${earnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               <Button
                 className="mt-4 w-full gradient-bg text-white"
                 onClick={() => toast.success("Withdrawal request submitted!")}
@@ -57,7 +72,7 @@ export default function PayoutsPage() {
                 <span className="text-sm text-muted-foreground">Total Earned</span>
                 <CreditCard className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-3xl font-bold font-heading">$73,400.00</p>
+              <p className="text-3xl font-bold font-heading">${earnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               <p className="text-xs text-muted-foreground mt-4">Since August 2025</p>
             </CardContent>
           </Card>

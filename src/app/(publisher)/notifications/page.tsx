@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, FileText, DollarSign, Settings, CheckCheck } from "lucide-react";
-import { notifications, type Notification } from "@/lib/mock-data";
+import { notificationsService } from "@frontend/services/notifications.service";
+import type { Notification } from "@frontend/types";
 import { toast } from "sonner";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -29,9 +29,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium">{notification.title}</p>
-          {!notification.read && (
-            <span className="w-2 h-2 rounded-full bg-violet shrink-0" />
-          )}
+          {!notification.read && <span className="w-2 h-2 rounded-full bg-violet shrink-0" />}
         </div>
         <p className="text-sm text-muted-foreground mt-0.5">{notification.message}</p>
         <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
@@ -41,54 +39,58 @@ function NotificationItem({ notification }: { notification: Notification }) {
 }
 
 export default function NotificationsPage() {
-  const [notifs, setNotifs] = useState(notifications);
+  const [items, setItems] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const markAllRead = () => {
-    setNotifs(notifs.map((n) => ({ ...n, read: true })));
-    toast.success("All notifications marked as read");
-  };
+  useEffect(() => {
+    notificationsService
+      .list()
+      .then(setItems)
+      .catch(() => toast.error("Failed to load notifications"))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const unreadCount = notifs.filter((n) => !n.read).length;
+  const unread = items.filter((n) => !n.read);
+  const read = items.filter((n) => n.read);
 
   return (
     <>
-      <Topbar title="Notifications" subtitle={`You have ${unreadCount} unread notifications`} />
-
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-violet" />
-            <Badge variant="secondary" className="text-xs">{unreadCount} new</Badge>
-          </div>
-          <Button variant="outline" size="sm" onClick={markAllRead}>
-            <CheckCheck className="h-4 w-4 mr-2" /> Mark all as read
-          </Button>
-        </div>
-
-        <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="article">Articles</TabsTrigger>
-            <TabsTrigger value="payment">Payments</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-          </TabsList>
-
-          {["all", "article", "payment", "system"].map((tab) => (
-            <TabsContent key={tab} value={tab}>
-              <Card className="border-border/50">
-                <CardContent className="p-2">
-                  <div className="space-y-1">
-                    {notifs
-                      .filter((n) => tab === "all" || n.type === tab)
-                      .map((notification) => (
-                        <NotificationItem key={notification.id} notification={notification} />
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          ))}
-        </Tabs>
+      <Topbar title="Notifications" subtitle="Stay updated on your account activity" />
+      <div className="p-4 sm:p-6">
+        <Card className="border-border/50">
+          <CardContent className="p-4 sm:p-6">
+            {loading ? (
+              <p className="text-sm text-muted-foreground">Loading notifications...</p>
+            ) : (
+              <Tabs defaultValue="all">
+                <div className="flex items-center justify-between mb-4">
+                  <TabsList>
+                    <TabsTrigger value="all">All ({items.length})</TabsTrigger>
+                    <TabsTrigger value="unread">Unread ({unread.length})</TabsTrigger>
+                  </TabsList>
+                  <Button variant="outline" size="sm" onClick={() => toast.success("All marked as read")}>
+                    <CheckCheck className="h-4 w-4 mr-1" /> Mark all read
+                  </Button>
+                </div>
+                <TabsContent value="all" className="space-y-1">
+                  {items.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Bell className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">No notifications yet</p>
+                    </div>
+                  ) : (
+                    items.map((n) => <NotificationItem key={n.id} notification={n} />)
+                  )}
+                </TabsContent>
+                <TabsContent value="unread" className="space-y-1">
+                  {unread.map((n) => (
+                    <NotificationItem key={n.id} notification={n} />
+                  ))}
+                </TabsContent>
+              </Tabs>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </>
   );
