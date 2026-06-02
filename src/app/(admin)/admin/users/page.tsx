@@ -25,7 +25,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
 
   useEffect(() => {
-    adminService.getUsers().then(setUsers).catch(() => toast.error("Failed to load users"));
+    adminService.getUsers().then((data) => setUsers(Array.isArray(data) ? data : (data as any)?.data ?? [])).catch(() => toast.error("Failed to load users"));
   }, []);
 
   return (
@@ -81,7 +81,7 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {(Array.isArray(users) ? users : []).map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -114,7 +114,7 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{user.joinDate}</TableCell>
                       <TableCell className="text-right text-sm">{user.articles}</TableCell>
-                      <TableCell className="text-right text-sm">${user.revenue.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-sm">${(user.revenue ?? 0).toLocaleString()}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger

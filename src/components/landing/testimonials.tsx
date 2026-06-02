@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { landingService } from "@frontend/services/landing.service";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MOCK_TESTIMONIALS } from "@frontend/services/mock-data";
 
 export function Testimonials() {
   const [testimonials, setTestimonials] = useState<
@@ -11,7 +12,12 @@ export function Testimonials() {
   >([]);
 
   useEffect(() => {
-    landingService.getContent().then((data) => setTestimonials(data.testimonials));
+    landingService.getContent().then((data) => {
+      const rawTestimonials = Array.isArray(data?.testimonials) ? data.testimonials : [];
+      setTestimonials(rawTestimonials.length > 0 ? rawTestimonials : MOCK_TESTIMONIALS);
+    }).catch(() => {
+      setTestimonials(MOCK_TESTIMONIALS);
+    });
   }, []);
 
   return (
@@ -32,7 +38,7 @@ export function Testimonials() {
 
         {/* Testimonial cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, index) => (
+          {(Array.isArray(testimonials) ? testimonials : []).map((testimonial, index) => (
             <div
               key={testimonial.name}
               className="relative rounded-xl border border-border/50 bg-card p-6 card-hover"

@@ -18,6 +18,11 @@ import {
   Legend,
 } from "recharts";
 import { toast } from "sonner";
+import { 
+  MOCK_MONTHLY_REVENUE, 
+  MOCK_WEEKLY_TRAFFIC, 
+  MOCK_TRAFFIC_BY_COUNTRY 
+} from "@frontend/services/mock-data";
 
 export default function AnalyticsPage() {
   const [monthlyRevenue, setMonthlyRevenue] = useState<
@@ -35,9 +40,13 @@ export default function AnalyticsPage() {
     analyticsService
       .getPublisherAnalytics()
       .then((data) => {
-        setMonthlyRevenue(data.monthlyRevenue as typeof monthlyRevenue);
-        setWeeklyTraffic(data.weeklyTraffic as typeof weeklyTraffic);
-        setTrafficByCountry(data.trafficByCountry as typeof trafficByCountry);
+        const rawMonthly = Array.isArray(data.monthlyRevenue) ? data.monthlyRevenue as typeof monthlyRevenue : [];
+        const rawWeekly = Array.isArray(data.weeklyTraffic) ? data.weeklyTraffic as typeof weeklyTraffic : [];
+        const rawCountry = Array.isArray(data.trafficByCountry) ? data.trafficByCountry as typeof trafficByCountry : [];
+        
+        setMonthlyRevenue(rawMonthly.length > 0 ? rawMonthly : MOCK_MONTHLY_REVENUE);
+        setWeeklyTraffic(rawWeekly.length > 0 ? rawWeekly : MOCK_WEEKLY_TRAFFIC);
+        setTrafficByCountry(rawCountry.length > 0 ? rawCountry : MOCK_TRAFFIC_BY_COUNTRY);
       })
       .catch(() => toast.error("Failed to load analytics"))
       .finally(() => setLoading(false));

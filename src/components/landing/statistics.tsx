@@ -71,7 +71,7 @@ export function Statistics() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat) => (
+          {(Array.isArray(stats) ? stats : []).map((stat) => (
             <div key={stat.label} className="text-center">
               <AnimatedCounter target={stat.value} suffix={stat.suffix} decimals={stat.decimals} />
               <p className="mt-2 text-sm sm:text-base text-muted-foreground font-medium">{stat.label}</p>

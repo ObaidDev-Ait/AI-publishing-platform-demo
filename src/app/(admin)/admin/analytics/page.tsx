@@ -16,11 +16,31 @@ export default function AdminAnalyticsPage() {
   const [contentCategories, setContentCategories] = useState<{ name: string; value: number; color: string }[]>([]);
 
   useEffect(() => {
+    const demoAdminRevenue = [
+      { month: "Jan", revenue: 4500, publishers: 120 },
+      { month: "Feb", revenue: 5200, publishers: 145 },
+      { month: "Mar", revenue: 6800, publishers: 180 },
+      { month: "Apr", revenue: 7400, publishers: 210 },
+      { month: "May", revenue: 8900, publishers: 250 },
+      { month: "Jun", revenue: 11200, publishers: 310 },
+    ];
+
+    const demoCategories = [
+      { name: "Technology", value: 35, color: "hsl(262, 83%, 58%)" },
+      { name: "Business", value: 25, color: "hsl(220, 83%, 58%)" },
+      { name: "Health", value: 20, color: "hsl(160, 83%, 45%)" },
+      { name: "Lifestyle", value: 15, color: "hsl(316, 73%, 52%)" },
+      { name: "Other", value: 5, color: "hsl(24, 95%, 53%)" },
+    ];
+
     analyticsService
       .getAdminAnalytics()
       .then((data) => {
-        setAdminRevenueByMonth(data.adminRevenueByMonth as typeof adminRevenueByMonth);
-        setContentCategories(data.contentCategories as typeof contentCategories);
+        const rawRevenue = Array.isArray(data.adminRevenueByMonth) ? data.adminRevenueByMonth as typeof adminRevenueByMonth : [];
+        const rawCategories = Array.isArray(data.contentCategories) ? data.contentCategories as typeof contentCategories : [];
+        
+        setAdminRevenueByMonth(rawRevenue.length > 0 ? rawRevenue : demoAdminRevenue);
+        setContentCategories(rawCategories.length > 0 ? rawCategories : demoCategories);
       })
       .catch(() => toast.error("Failed to load analytics"));
   }, []);

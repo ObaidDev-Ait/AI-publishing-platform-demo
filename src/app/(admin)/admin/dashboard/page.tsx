@@ -87,7 +87,7 @@ export default function AdminDashboardPage() {
           <CardContent>
             <div className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={adminRevenueByMonth}>
+                <AreaChart data={Array.isArray(adminRevenueByMonth) ? adminRevenueByMonth : []}>
                   <defs>
                     <linearGradient id="adminRevenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.3} />

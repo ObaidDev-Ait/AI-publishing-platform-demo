@@ -16,10 +16,10 @@ export default function RevenuePage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
 
   useEffect(() => {
-    adminService.getRevenue().then(setUsers).catch(() => toast.error("Failed to load revenue data"));
+    adminService.getRevenue().then((data) => setUsers(Array.isArray(data) ? data : (data as any)?.data ?? [])).catch(() => toast.error("Failed to load revenue data"));
   }, []);
 
-  const totalRevenue = users.reduce((sum, u) => sum + u.revenue, 0);
+  const totalRevenue = users.reduce((sum, u) => sum + (u.revenue ?? 0), 0);
 
   return (
     <>
@@ -92,7 +92,7 @@ export default function RevenuePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users
+                  {(Array.isArray(users) ? users : [])
                     .filter((u) => u.role === "publisher" && u.revenue > 0)
                     .map((user) => {
                       const commission = Math.round(user.revenue * 0.15);
@@ -104,9 +104,9 @@ export default function RevenuePage() {
                             <p className="text-xs text-muted-foreground">{user.email}</p>
                           </TableCell>
                           <TableCell className="text-right text-sm">{user.articles}</TableCell>
-                          <TableCell className="text-right text-sm font-medium">${user.revenue.toLocaleString()}</TableCell>
-                          <TableCell className="text-right text-sm text-violet">${commission.toLocaleString()}</TableCell>
-                          <TableCell className="text-right text-sm">${earnings.toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-sm font-medium">${(user.revenue ?? 0).toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-sm text-violet">${(commission ?? 0).toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-sm">${(earnings ?? 0).toLocaleString()}</TableCell>
                           <TableCell>
                             <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 text-xs">Paid</Badge>
                           </TableCell>

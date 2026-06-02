@@ -6,6 +6,7 @@ import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { landingService } from "@frontend/services/landing.service";
+import { MOCK_PRICING_PLANS } from "@frontend/services/mock-data";
 
 export function Pricing() {
   const [annual, setAnnual] = useState(false);
@@ -21,7 +22,12 @@ export function Pricing() {
   >([]);
 
   useEffect(() => {
-    landingService.getContent().then((data) => setPricingPlans(data.pricingPlans as typeof pricingPlans));
+    landingService.getContent().then((data) => {
+      const rawPlans = Array.isArray(data?.pricingPlans) ? data.pricingPlans : [];
+      setPricingPlans((rawPlans.length > 0 ? rawPlans : MOCK_PRICING_PLANS) as typeof pricingPlans);
+    }).catch(() => {
+      setPricingPlans(MOCK_PRICING_PLANS as typeof pricingPlans);
+    });
   }, []);
 
   return (
@@ -64,7 +70,7 @@ export function Pricing() {
 
         {/* Pricing cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-          {pricingPlans.map((plan) => (
+          {(Array.isArray(pricingPlans) ? pricingPlans : []).map((plan) => (
             <div
               key={plan.name}
               className={`relative rounded-xl border bg-card p-6 sm:p-8 card-hover ${
@@ -106,7 +112,7 @@ export function Pricing() {
 
               <div className="mt-6 pt-6 border-t border-border/50">
                 <ul className="space-y-3">
-                  {plan.features.map((feature) => (
+                  {(Array.isArray(plan.features) ? plan.features : []).map((feature) => (
                     <li key={feature.text} className="flex items-center gap-3 text-sm">
                       {feature.included ? (
                         <Check className="h-4 w-4 text-green-500 shrink-0" />

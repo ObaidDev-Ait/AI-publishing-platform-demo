@@ -47,7 +47,9 @@ frames1/
 frames2/
 *.zip
 *.db
+*.sqlite
 *.mp4
+*.log
 dist/
 temp/
 tmp/

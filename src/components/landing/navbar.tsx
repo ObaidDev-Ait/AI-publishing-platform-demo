@@ -26,7 +26,7 @@ export function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {(Array.isArray(navLinks) ? navLinks : []).map((link) => (
               <a
                 key={link.label}
                 href={link.href}
@@ -67,7 +67,7 @@ export function Navbar() {
                 <div className="flex flex-col gap-6 mt-8">
                   <Logo />
                   <div className="flex flex-col gap-1">
-                    {navLinks.map((link) => (
+                    {(Array.isArray(navLinks) ? navLinks : []).map((link) => (
                       <a
                         key={link.label}
                         href={link.href}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Search, BarChart3, Globe, Zap, Shield } from "lucide-react";
 import { landingService } from "@frontend/services/landing.service";
+import { MOCK_FEATURES } from "@frontend/services/mock-data";
 
 const iconMap: Record<string, React.ReactNode> = {
   Sparkles: <Sparkles className="h-6 w-6" />,
@@ -17,7 +18,12 @@ export function Features() {
   const [features, setFeatures] = useState<{ icon: string; title: string; description: string }[]>([]);
 
   useEffect(() => {
-    landingService.getContent().then((data) => setFeatures(data.features));
+    landingService.getContent().then((data) => {
+      const rawFeatures = Array.isArray(data?.features) ? data.features : [];
+      setFeatures(rawFeatures.length > 0 ? rawFeatures : MOCK_FEATURES);
+    }).catch(() => {
+      setFeatures(MOCK_FEATURES);
+    });
   }, []);
 
   return (
@@ -38,7 +44,7 @@ export function Features() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
+          {(Array.isArray(features) ? features : []).map((feature, index) => (
             <div
               key={feature.title}
               className="group relative rounded-xl border border-border/50 bg-card p-6 card-hover"

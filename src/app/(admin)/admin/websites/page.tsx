@@ -31,7 +31,7 @@ export default function WebsitesPage() {
   useEffect(() => {
     adminService
       .getWordPressSites()
-      .then((data) => setWordPressSites(data as typeof wordPressSites))
+      .then((data) => setWordPressSites(Array.isArray(data) ? data : (data as any)?.data ?? []))
       .catch(() => toast.error("Failed to load WordPress sites"));
   }, []);
 
@@ -46,7 +46,7 @@ export default function WebsitesPage() {
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Active Sites</p>
               <p className="text-3xl font-bold font-heading mt-1 text-green-500">
-                {wordPressSites.filter((s) => s.status === "active").length}
+                {(Array.isArray(wordPressSites) ? wordPressSites : []).filter((s) => s.status === "active").length}
               </p>
             </CardContent>
           </Card>
@@ -54,7 +54,7 @@ export default function WebsitesPage() {
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Total Articles</p>
               <p className="text-3xl font-bold font-heading mt-1">
-                {wordPressSites.reduce((sum, s) => sum + s.articles, 0).toLocaleString()}
+                {(Array.isArray(wordPressSites) ? wordPressSites : []).reduce((sum, s) => sum + s.articles, 0).toLocaleString()}
               </p>
             </CardContent>
           </Card>
@@ -62,7 +62,7 @@ export default function WebsitesPage() {
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Total Traffic</p>
               <p className="text-3xl font-bold font-heading mt-1">
-                {(wordPressSites.reduce((sum, s) => sum + s.traffic, 0) / 1000).toFixed(0)}K
+                {((Array.isArray(wordPressSites) ? wordPressSites : []).reduce((sum, s) => sum + s.traffic, 0) / 1000).toFixed(0)}K
               </p>
             </CardContent>
           </Card>
@@ -121,7 +121,7 @@ export default function WebsitesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {wordPressSites.map((site) => (
+                  {(Array.isArray(wordPressSites) ? wordPressSites : []).map((site) => (
                     <TableRow key={site.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">

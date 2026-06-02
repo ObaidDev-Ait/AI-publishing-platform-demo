@@ -51,7 +51,7 @@ export function Footer() {
               The all-in-one AI-powered platform for content creation, publishing, and monetization.
             </p>
             <div className="flex gap-3 mt-6">
-              {socialLinks.map((social) => (
+              {(Array.isArray(socialLinks) ? socialLinks : []).map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
@@ -65,11 +65,11 @@ export function Footer() {
           </div>
 
           {/* Link columns */}
-          {Object.entries(footerLinks).map(([title, links]) => (
+          {Object.entries(footerLinks || {}).map(([title, links]) => (
             <div key={title}>
               <h4 className="text-sm font-semibold mb-4">{title}</h4>
               <ul className="space-y-3">
-                {links.map((link) => (
+                {(Array.isArray(links) ? links : []).map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}

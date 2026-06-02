@@ -42,7 +42,7 @@ export default function PublishersPage() {
 
         {/* Applications */}
         <div className="space-y-4">
-          {publisherApplications.map((app) => (
+          {(Array.isArray(publisherApplications) ? publisherApplications : []).map((app) => (
             <Card key={app.id} className="border-border/50 card-hover">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">

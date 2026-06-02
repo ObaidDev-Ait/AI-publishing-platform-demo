@@ -162,7 +162,7 @@ export default function ProfilePage() {
                   {profile.joinDate ? `Publisher since ${new Date(profile.joinDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}` : ""}
                 </p>
                 <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                  <span>Earnings: <strong className="text-foreground">${profile.earnings.toLocaleString()}</strong></span>
+                  <span>Earnings: <strong className="text-foreground">${(profile.earnings ?? 0).toLocaleString()}</strong></span>
                   <span>Articles: <strong className="text-foreground">{profile.articles}</strong></span>
                 </div>
                 <Button variant="outline" size="sm" className="mt-3" onClick={handleUploadClick}>

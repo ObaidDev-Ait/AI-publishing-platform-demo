@@ -19,7 +19,7 @@ export default function AdminArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    articlesService.adminList().then(setArticles).catch(() => toast.error("Failed to load articles"));
+    articlesService.adminList().then((data) => setArticles(Array.isArray(data) ? data : (data as any)?.data ?? [])).catch(() => toast.error("Failed to load articles"));
   }, []);
 
   return (
@@ -57,7 +57,7 @@ export default function AdminArticlesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {articles.map((article) => (
+                  {(Array.isArray(articles) ? articles : []).map((article) => (
                     <TableRow key={article.id}>
                       <TableCell>
                         <p className="text-sm font-medium">{article.title}</p>

@@ -55,7 +55,7 @@ export default function AIGeneratorPage() {
   const [article, setArticle] = useState<any>(null);
 
   useEffect(() => {
-    configService.getLanguages().then(setLanguages).catch(() => toast.error("Failed to load languages"));
+    configService.getLanguages().then((data) => setLanguages(Array.isArray(data) ? data : (data as any)?.data ?? [])).catch(() => toast.error("Failed to load languages"));
   }, []);
 
   const handleGenerate = async () => {
@@ -429,13 +429,13 @@ export default function AIGeneratorPage() {
                 </Card>
 
                 {/* FAQ section */}
-                {article.faqs && article.faqs.length > 0 && (
+                {article.faqs && (Array.isArray(article.faqs) ? article.faqs : []).length > 0 && (
                   <Card className="border-border/50">
                     <CardHeader>
                       <CardTitle className="text-base font-heading">Generated FAQs</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {article.faqs.map((faq: any, index: number) => (
+                      {(Array.isArray(article.faqs) ? article.faqs : []).map((faq: any, index: number) => (
                         <div key={index} className="border border-border/50 rounded-lg">
                           <button
                             className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 transition-colors rounded-lg"

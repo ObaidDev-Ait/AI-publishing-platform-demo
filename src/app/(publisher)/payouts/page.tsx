@@ -125,7 +125,7 @@ export default function PayoutsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payouts.map((payout) => (
+                  {(Array.isArray(payouts) ? payouts : []).map((payout) => (
                     <TableRow key={payout.id}>
                       <TableCell className="font-mono text-sm">{payout.reference}</TableCell>
                       <TableCell className="text-sm">{payout.date}</TableCell>

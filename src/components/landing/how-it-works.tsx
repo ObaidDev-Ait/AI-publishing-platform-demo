@@ -48,7 +48,7 @@ export function HowItWorks() {
           {/* Connection line - desktop only */}
           <div className="hidden lg:block absolute top-16 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-violet/30 via-chart-2/30 to-chart-3/30" />
 
-          {steps.map((step, index) => (
+          {(Array.isArray(steps) ? steps : []).map((step, index) => (
             <div key={step.title} className="relative flex flex-col items-center text-center">
               {/* Step number */}
               <div className="relative z-10 mb-6">

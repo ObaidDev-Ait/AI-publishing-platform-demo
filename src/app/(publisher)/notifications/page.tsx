@@ -9,6 +9,7 @@ import { Bell, FileText, DollarSign, Settings, CheckCheck } from "lucide-react";
 import { notificationsService } from "@frontend/services/notifications.service";
 import type { Notification } from "@frontend/types";
 import { toast } from "sonner";
+import { MOCK_NOTIFICATIONS } from "@frontend/services/mock-data";
 
 const iconMap: Record<string, React.ReactNode> = {
   article: <FileText className="h-5 w-5 text-blue-500" />,
@@ -45,7 +46,10 @@ export default function NotificationsPage() {
   useEffect(() => {
     notificationsService
       .list()
-      .then(setItems)
+      .then((data) => {
+        const rawItems = Array.isArray(data) ? data : (data as any)?.data ?? [];
+        setItems(rawItems.length > 0 ? rawItems : MOCK_NOTIFICATIONS);
+      })
       .catch(() => toast.error("Failed to load notifications"))
       .finally(() => setLoading(false));
   }, []);
@@ -79,11 +83,11 @@ export default function NotificationsPage() {
                       <p className="text-sm text-muted-foreground">No notifications yet</p>
                     </div>
                   ) : (
-                    items.map((n) => <NotificationItem key={n.id} notification={n} />)
+                    (Array.isArray(items) ? items : []).map((n) => <NotificationItem key={n.id} notification={n} />)
                   )}
                 </TabsContent>
                 <TabsContent value="unread" className="space-y-1">
-                  {unread.map((n) => (
+                  {(Array.isArray(unread) ? unread : []).map((n) => (
                     <NotificationItem key={n.id} notification={n} />
                   ))}
                 </TabsContent>

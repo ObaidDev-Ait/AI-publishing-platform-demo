@@ -44,7 +44,7 @@ export default function ArticlesPage() {
       const res = await fetch(`/api/articles?${query.toString()}`);
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
-      setDbArticles(data);
+      setDbArticles(Array.isArray(data) ? data : data?.data ?? []);
     } catch (err) {
       toast.error("Could not fetch articles from server");
     } finally {
@@ -146,14 +146,14 @@ export default function ArticlesPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : dbArticles.length === 0 ? (
+                  ) : (Array.isArray(dbArticles) ? dbArticles : []).length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">
                         No articles found matching filters.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    dbArticles.map((article) => (
+                    (Array.isArray(dbArticles) ? dbArticles : []).map((article) => (
                       <TableRow key={article.id} className="hover:bg-muted/30">
                         <TableCell>
                           <div>
@@ -177,8 +177,8 @@ export default function ArticlesPage() {
                             {article.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right text-sm">{article.clicks.toLocaleString()}</TableCell>
-                        <TableCell className="text-right text-sm">${article.revenue.toLocaleString()}</TableCell>
+                        <TableCell className="text-right text-sm">{(article.clicks ?? 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-right text-sm">${(article.revenue ?? 0).toLocaleString()}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{article.date}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
@@ -212,7 +212,7 @@ export default function ArticlesPage() {
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            Showing {dbArticles.length} articles
+            Showing {(Array.isArray(dbArticles) ? dbArticles : []).length} articles
           </p>
           <div className="flex gap-2 flex-wrap justify-center">
             <Button variant="outline" size="sm" disabled>Previous</Button>
