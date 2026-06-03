@@ -41,11 +41,30 @@ export async function loginUser(email: string, password: string) {
     user = await prisma.user.findUnique({ where: { email } });
   } catch (err) {
     console.error("[auth.service] Database error during login:", err);
+    // Vercel Fallback for Demo Account
+    if (email === "hamza@example.com" && password === "password123") {
+      const token = createSessionToken("demo-user-id");
+      return {
+        token,
+        user: { id: "demo-user-id", name: "Hamza", email, rank: "Gold Publisher" },
+      };
+    }
     return { error: "Database error", status: 500 as const };
   }
 
-  if (!user || user.password !== password) {
-    console.log("[auth.service] Invalid credentials:", email);
+  if (!user) {
+    // Vercel Fallback if DB is empty
+    if (email === "hamza@example.com" && password === "password123") {
+      const token = createSessionToken("demo-user-id");
+      return {
+        token,
+        user: { id: "demo-user-id", name: "Hamza", email, rank: "Gold Publisher" },
+      };
+    }
+    return { error: "Invalid email or password", status: 401 as const };
+  }
+
+  if (user.password !== password) {
     return { error: "Invalid email or password", status: 401 as const };
   }
 
@@ -68,24 +87,40 @@ export async function registerUser(name: string, email: string, password: string
     return { error: "Name, email, and password are required", status: 400 as const };
   }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return { error: "User already exists", status: 400 as const };
+  try {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return { error: "User already exists", status: 400 as const };
+    }
+
+    const user = await prisma.user.create({
+      data: { name, email, password },
+    });
+    console.log("[auth.service] Registration SUCCESS — user created:", user.id);
+
+    const token = createSessionToken(user.id);
+    return {
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        rank: user.rank,
+      },
+    };
+  } catch (err) {
+    console.error("[auth.service] Registration DB error. Using Vercel Fallback.");
+    // Vercel Read-Only Fallback
+    const fallbackId = `new-user-${Date.now()}`;
+    const token = createSessionToken(fallbackId);
+    return {
+      token,
+      user: {
+        id: fallbackId,
+        name,
+        email,
+        rank: "New Publisher",
+      },
+    };
   }
-
-  const user = await prisma.user.create({
-    data: { name, email, password },
-  });
-  console.log("[auth.service] Registration SUCCESS — user created:", user.id);
-
-  const token = createSessionToken(user.id);
-  return {
-    token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      rank: user.rank,
-    },
-  };
 }

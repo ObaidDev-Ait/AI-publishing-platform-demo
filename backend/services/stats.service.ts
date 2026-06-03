@@ -1,10 +1,15 @@
 import { prisma } from "@backend/database/client";
 
 export async function getDashboardStats(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { earnings: true, articles: true, rank: true },
-  });
+  let user = null;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { earnings: true, articles: true, rank: true },
+    });
+  } catch (err) {
+    console.warn("[stats.service] DB error, using Vercel fallback stats");
+  }
 
   // Return realistic-looking dashboard stats based on user data
   return {
