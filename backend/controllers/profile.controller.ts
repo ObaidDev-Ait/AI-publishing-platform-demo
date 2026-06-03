@@ -23,7 +23,7 @@ export async function getProfile() {
     const auth = await requireAuth();
     if (!auth) {
       console.log("[profile.controller] requireAuth() returned null — user not authenticated");
-      return jsonError("Unauthorized", 401);
+      return jsonSuccess({ authenticated: false, error: "Unauthorized" });
     }
 
     console.log("[profile.controller] Authenticated user:", auth.userId);

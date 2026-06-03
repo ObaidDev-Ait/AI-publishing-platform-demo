@@ -45,8 +45,8 @@ export function Sidebar({ collapsed, onToggle, onItemClick }: SidebarProps) {
     async function getProfile() {
       try {
         const res = await fetch("/api/profile");
-        if (res.ok) {
-          const data = await res.json();
+        const data = await res.json();
+        if (res.ok && data.authenticated !== false) {
           setUser({ name: data.name, avatarUrl: data.avatarUrl });
         }
       } catch (err) {

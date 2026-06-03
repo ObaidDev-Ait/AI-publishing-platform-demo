@@ -34,10 +34,10 @@ export default function ProfilePage() {
     async function fetchProfile() {
       try {
         const res = await fetch("/api/profile");
-        if (!res.ok) {
+        const data = await res.json();
+        if (!res.ok || data.authenticated === false) {
           throw new Error("Failed to load profile");
         }
-        const data = await res.json();
         
         // Populate missing stats with realistic demo data
         setProfile({

@@ -18,7 +18,8 @@ export default function PublisherLayout({ children }: { children: React.ReactNod
     async function checkAuth() {
       try {
         const res = await fetch("/api/profile");
-        if (!res.ok) {
+        const data = await res.json();
+        if (!res.ok || data.authenticated === false) {
           throw new Error("Unauthorized");
         }
         setCheckingAuth(false);
