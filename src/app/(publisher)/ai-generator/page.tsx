@@ -119,7 +119,7 @@ export default function AIGeneratorPage() {
     setKeywords(keywords.filter((k) => k !== kw));
   };
 
-  const selectedLangConfig = languages.find((l) => l.id === language) || languages[0];
+  const selectedLangConfig = languages.find((l) => l.id === language) || languages[0] || { id: "english", label: "English", nativeLabel: "English", flag: "🇺🇸", dir: "ltr" };
 
   return (
     <>
