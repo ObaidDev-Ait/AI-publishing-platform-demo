@@ -14,7 +14,7 @@ import {
 
 export function Hero() {
   const [isOpen, setIsOpen] = useState(false);
-  const demoVideoUrl = "/video1.mp4";
+  const demoVideoUrl = "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"; // External demo placeholder
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
