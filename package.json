@@ -39,9 +39,5 @@
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "prisma": {
-    "schema": "backend/prisma/schema.prisma",
-    "seed": "npx tsx backend/prisma/seed.ts"
   }
 }
