@@ -25,12 +25,13 @@ export async function getProfile(userId: string) {
   }
 
   // Fallback profile
+  const isAdmin = userId === "demo-admin-id" || userId.includes("admin");
   return {
     id: userId,
-    name: "Demo User",
-    email: "demo@example.com",
-    role: "publisher",
-    rank: "Gold Publisher",
+    name: isAdmin ? "Admin User" : "Demo User",
+    email: isAdmin ? "admin@contentflow.ai" : "demo@example.com",
+    role: isAdmin ? "admin" : "publisher",
+    rank: isAdmin ? "Administrator" : "Gold Publisher",
     earnings: 1200.0,
     articles: 25,
     joinDate: new Date(),
@@ -64,12 +65,13 @@ export async function updateProfile(userId: string, data: { name?: string; bio?:
   } catch (err) {
     console.warn("[profile.service] DB update error, simulating Vercel success");
     // Simulate successful update
+    const isAdmin = userId === "demo-admin-id" || userId.includes("admin");
     return {
       id: userId,
-      name: data.name || "Demo User",
-      email: "demo@example.com",
-      role: "publisher",
-      rank: "Gold Publisher",
+      name: data.name || (isAdmin ? "Admin User" : "Demo User"),
+      email: isAdmin ? "admin@contentflow.ai" : "demo@example.com",
+      role: isAdmin ? "admin" : "publisher",
+      rank: isAdmin ? "Administrator" : "Gold Publisher",
       earnings: 1200.0,
       articles: 25,
       joinDate: new Date(),

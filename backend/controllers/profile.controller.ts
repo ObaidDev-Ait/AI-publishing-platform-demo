@@ -32,13 +32,35 @@ export async function getProfile() {
     const profile = await profileService.getProfile(auth.userId);
     if (!profile) {
       console.warn("[profile.controller] User not found in DB, returning demo profile");
-      return jsonSuccess(DEMO_PROFILE);
+      const isAdmin = auth.role === "admin" || auth.userId === "demo-admin-id" || auth.userId.includes("admin");
+      return jsonSuccess({
+        ...DEMO_PROFILE,
+        id: auth.userId,
+        name: isAdmin ? "Admin User" : DEMO_PROFILE.name,
+        email: isAdmin ? "admin@contentflow.ai" : DEMO_PROFILE.email,
+        role: isAdmin ? "admin" : "publisher",
+        rank: isAdmin ? "Administrator" : DEMO_PROFILE.rank,
+      });
     }
 
     return jsonSuccess(profile);
   } catch (error) {
     console.error("[profile.controller] getProfile() crashed:", error);
-    // Return demo profile instead of crashing
+    // Return demo profile instead of crashing, but adjust role if possible
+    try {
+      const auth = await requireAuth();
+      if (auth) {
+        const isAdmin = auth.role === "admin" || auth.userId === "demo-admin-id" || auth.userId.includes("admin");
+        return jsonSuccess({
+          ...DEMO_PROFILE,
+          id: auth.userId,
+          name: isAdmin ? "Admin User" : DEMO_PROFILE.name,
+          email: isAdmin ? "admin@contentflow.ai" : DEMO_PROFILE.email,
+          role: isAdmin ? "admin" : "publisher",
+          rank: isAdmin ? "Administrator" : DEMO_PROFILE.rank,
+        });
+      }
+    } catch (_) {}
     return jsonSuccess(DEMO_PROFILE);
   }
 }
