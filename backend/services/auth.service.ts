@@ -2,6 +2,11 @@ import { prisma } from "@backend/database/client";
 import { createSessionToken } from "@backend/utils/jwt";
 import bcrypt from "bcryptjs";
 
+// DEMO ROLE DETECTION - replace with real RBAC in production
+function detectDemoRole(email: string): "admin" | "publisher" {
+  return email.toLowerCase().includes("admin") ? "admin" : "publisher";
+}
+
 /** Ensures the demo accounts exist in the database */
 async function ensureDemoAccounts() {
   const accounts = [
@@ -55,41 +60,37 @@ export async function loginUser(email: string, password: string) {
     user = await prisma.user.findUnique({ where: { email } });
   } catch (err) {
     console.error("[auth.service] Database error during login:", err);
-    // Vercel Fallback for Demo Accounts
-    if (email === "admin@contentflow.ai" && password === "admin123") {
-      const token = await createSessionToken("demo-admin-id");
-      return {
-        token,
-        user: { id: "demo-admin-id", name: "Admin", email, role: "admin", rank: "Administrator" },
-      };
-    }
-    if (email === "publisher@contentflow.ai" && password === "publisher123") {
-      const token = await createSessionToken("demo-user-id");
-      return {
-        token,
-        user: { id: "demo-user-id", name: "Hamza", email, role: "publisher", rank: "Gold Publisher" },
-      };
-    }
-    return { error: "Database error", status: 500 as const };
+    // DEMO ROLE DETECTION - replace with real RBAC in production
+    const fallbackRole = detectDemoRole(email);
+    const fallbackId = fallbackRole === "admin" ? "demo-admin-id" : "demo-user-id";
+    const token = await createSessionToken(fallbackId);
+    return {
+      token,
+      user: {
+        id: fallbackId,
+        name: email.split("@")[0],
+        email,
+        role: fallbackRole,
+        rank: fallbackRole === "admin" ? "Administrator" : "Gold Publisher",
+      },
+    };
   }
 
   if (!user) {
-    // Vercel Fallback if DB is empty
-    if (email === "admin@contentflow.ai" && password === "admin123") {
-      const token = await createSessionToken("demo-admin-id");
-      return {
-        token,
-        user: { id: "demo-admin-id", name: "Admin", email, role: "admin", rank: "Administrator" },
-      };
-    }
-    if (email === "publisher@contentflow.ai" && password === "publisher123") {
-      const token = await createSessionToken("demo-user-id");
-      return {
-        token,
-        user: { id: "demo-user-id", name: "Hamza", email, role: "publisher", rank: "Gold Publisher" },
-      };
-    }
-    return { error: "Invalid email or password", status: 401 as const };
+    // DEMO ROLE DETECTION - replace with real RBAC in production
+    const fallbackRole = detectDemoRole(email);
+    const fallbackId = fallbackRole === "admin" ? "demo-admin-id" : `demo-user-${Date.now()}`;
+    const token = await createSessionToken(fallbackId);
+    return {
+      token,
+      user: {
+        id: fallbackId,
+        name: email.split("@")[0],
+        email,
+        role: fallbackRole,
+        rank: fallbackRole === "admin" ? "Administrator" : "New Publisher",
+      },
+    };
   }
 
   // Handle auto-migration for legacy plain-text passwords
@@ -139,8 +140,11 @@ export async function registerUser(name: string, email: string, password: string
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // DEMO ROLE DETECTION - replace with real RBAC in production
+    const role = detectDemoRole(email);
+
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role: "publisher" },
+      data: { name, email, password: hashedPassword, role },
     });
     console.log("[auth.service] Registration SUCCESS — user created:", user.id);
 
@@ -157,7 +161,8 @@ export async function registerUser(name: string, email: string, password: string
     };
   } catch (err) {
     console.error("[auth.service] Registration DB error. Using Vercel Fallback.");
-    // Vercel Read-Only Fallback
+    // DEMO ROLE DETECTION - replace with real RBAC in production
+    const fallbackRole = detectDemoRole(email);
     const fallbackId = `new-user-${Date.now()}`;
     const token = await createSessionToken(fallbackId);
     return {
@@ -166,8 +171,8 @@ export async function registerUser(name: string, email: string, password: string
         id: fallbackId,
         name,
         email,
-        role: "publisher",
-        rank: "New Publisher",
+        role: fallbackRole,
+        rank: fallbackRole === "admin" ? "Administrator" : "New Publisher",
       },
     };
   }

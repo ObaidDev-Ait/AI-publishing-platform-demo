@@ -19,8 +19,14 @@ export async function requireAuth(): Promise<AuthContext | null> {
       return null;
     }
 
-    if (sessionId === "demo-user-id" || sessionId.startsWith("new-user-")) {
-      console.log("[auth.middleware] Fast-pathing Vercel fallback session for:", sessionId);
+    // DEMO ROLE DETECTION - replace with real RBAC in production
+    if (sessionId === "demo-admin-id") {
+      console.log("[auth.middleware] Fast-pathing Vercel fallback session for admin:", sessionId);
+      return { userId: sessionId, role: "admin" };
+    }
+
+    if (sessionId === "demo-user-id" || sessionId.startsWith("new-user-") || sessionId.startsWith("demo-user-")) {
+      console.log("[auth.middleware] Fast-pathing Vercel fallback session for publisher:", sessionId);
       return { userId: sessionId, role: "publisher" };
     }
 

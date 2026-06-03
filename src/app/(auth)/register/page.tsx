@@ -14,14 +14,34 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const name = formData.get("name") as string;
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Registration failed");
+
+      toast.success("Account created! Redirecting...");
+
+      // DEMO ROLE DETECTION - replace with real RBAC in production
+      const role = data.user?.role;
+      const redirectUrl = role === "admin" ? "/admin/dashboard" : "/dashboard";
+      setTimeout(() => { window.location.href = redirectUrl; }, 1000);
+    } catch (err) {
+      toast.error((err as Error).message || "Registration failed");
+    } finally {
       setLoading(false);
-      toast.success("Account created! Redirecting to dashboard...");
-      setTimeout(() => { window.location.href = "/dashboard"; }, 1000);
-    }, 1500);
+    }
   };
 
   const handleOAuthLogin = async (provider: string) => {
@@ -35,7 +55,11 @@ export default function RegisterPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
       toast.success(`${provider} authentication successful! Redirecting...`);
-      setTimeout(() => { window.location.href = "/dashboard"; }, 1000);
+
+      // DEMO ROLE DETECTION - replace with real RBAC in production
+      const role = data.user?.role;
+      const redirectUrl = role === "admin" ? "/admin/dashboard" : "/dashboard";
+      setTimeout(() => { window.location.href = redirectUrl; }, 1000);
     } catch (err) { 
       toast.error((err as Error).message || "Something went wrong");
     } finally {
@@ -86,7 +110,7 @@ export default function RegisterPage() {
               <Label htmlFor="name">Full Name</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="name" placeholder="John Doe" className="pl-10 h-11" />
+                <Input id="name" name="name" placeholder="John Doe" className="pl-10 h-11" />
               </div>
             </div>
 
@@ -94,7 +118,7 @@ export default function RegisterPage() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="you@example.com" className="pl-10 h-11" />
+                <Input id="email" name="email" type="email" placeholder="you@example.com" className="pl-10 h-11" />
               </div>
             </div>
 
@@ -104,6 +128,7 @@ export default function RegisterPage() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Min. 8 characters"
                   className="pl-10 pr-10 h-11"
