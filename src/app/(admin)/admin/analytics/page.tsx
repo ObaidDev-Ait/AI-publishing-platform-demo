@@ -14,6 +14,7 @@ import { toast } from "sonner";
 export default function AdminAnalyticsPage() {
   const [adminRevenueByMonth, setAdminRevenueByMonth] = useState<{ month: string; revenue: number; publishers: number }[]>([]);
   const [contentCategories, setContentCategories] = useState<{ name: string; value: number; color: string }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const demoAdminRevenue = [
@@ -42,8 +43,46 @@ export default function AdminAnalyticsPage() {
         setAdminRevenueByMonth(rawRevenue.length > 0 ? rawRevenue : demoAdminRevenue);
         setContentCategories(rawCategories.length > 0 ? rawCategories : demoCategories);
       })
-      .catch(() => toast.error("Failed to load analytics"));
+      })
+      .catch(() => toast.error("Failed to load analytics"))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Topbar title="Platform Analytics" subtitle="Loading metrics..." />
+        <div className="p-4 sm:p-6 space-y-6">
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-[350px] bg-muted/50 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border-border/50">
+              <CardHeader className="pb-2">
+                <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px] bg-muted/50 rounded animate-pulse" />
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardHeader className="pb-2">
+                <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px] bg-muted/50 rounded-full mx-auto w-[300px] animate-pulse" />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -60,7 +99,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <LineChart data={adminRevenueByMonth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
@@ -91,7 +130,7 @@ export default function AdminAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={adminRevenueByMonth}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
@@ -119,7 +158,7 @@ export default function AdminAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <PieChart>
                     <Pie
                       data={contentCategories}

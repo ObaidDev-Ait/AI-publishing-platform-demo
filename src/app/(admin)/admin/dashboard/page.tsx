@@ -38,7 +38,26 @@ export default function AdminDashboardPage() {
     return (
       <>
         <Topbar title="Admin Dashboard" subtitle="Loading..." />
-        <div className="p-6 text-sm text-muted-foreground">Loading dashboard...</div>
+        <div className="p-4 sm:p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Card key={i} className="border-border/50">
+                <CardContent className="p-5 space-y-3">
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                  <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Card className="border-border/50">
+            <CardHeader>
+              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-[350px] bg-muted/50 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+        </div>
       </>
     );
   }
@@ -86,7 +105,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart data={Array.isArray(adminRevenueByMonth) ? adminRevenueByMonth : []}>
                   <defs>
                     <linearGradient id="adminRevenueGrad" x1="0" y1="0" x2="0" y2="1">

@@ -10,8 +10,7 @@ export async function getProfile(userId: string) {
       rank: true,
       earnings: true,
       articles: true,
-      // @ts-ignore - IDE caching issue, field exists in schema
-      createdAt: true,
+      joinDate: true,
     },
   });
 }

@@ -54,14 +54,22 @@ export const MOCK_WEEKLY_TRAFFIC = [
 ];
 
 export const MOCK_NOTIFICATIONS = [
-  { id: "1", title: "Article Approved", message: "Your article '10 Best AI Tools for 2026' was approved and published.", time: "10 mins ago", read: false, type: "article" },
-  { id: "2", title: "Article Generated", message: "New AI article generated successfully and is ready for review.", time: "1 hour ago", read: false, type: "article" },
-  { id: "3", title: "Payout Processed", message: "Payout request of $450 processed successfully. Funds are on the way.", time: "2 hours ago", read: false, type: "payment" },
-  { id: "4", title: "Traffic Update", message: "Traffic increased by 23% this week! Keep up the good work.", time: "1 day ago", read: true, type: "system" },
-  { id: "5", title: "SEO Score Improved", message: "Your overall SEO score improved to 92/100 across your domain.", time: "2 days ago", read: true, type: "system" },
-  { id: "6", title: "Profile Updated", message: "Profile updated successfully with your new payment information.", time: "3 days ago", read: true, type: "system" },
-  { id: "7", title: "Monetization Opportunity", message: "New monetization opportunity detected for your top performing articles.", time: "4 days ago", read: true, type: "payment" },
-  { id: "8", title: "Welcome to ContentFlow AI", message: "Welcome aboard! Get started by generating your first AI article.", time: "1 week ago", read: true, type: "system" },
+  { id: "1", title: "Article Approved", message: "Your article '10 Best AI Tools for 2026' has been approved and published.", time: "10 mins ago", read: false, type: "success" },
+  { id: "2", title: "Payment Processed", message: "Your payout request of $450 has been processed successfully.", time: "2 hours ago", read: false, type: "success" },
+  { id: "3", title: "New AI Article Generated", message: "Article 'Future of Machine Learning' is ready for review.", time: "5 hours ago", read: false, type: "info" },
+  { id: "4", title: "Traffic Milestone", message: "Congratulations! Your traffic increased by 23% this week.", time: "1 day ago", read: true, type: "info" },
+  { id: "5", title: "SEO Score Improved", message: "Your average SEO score improved to 92/100.", time: "2 days ago", read: true, type: "info" },
+  { id: "6", title: "Profile Updated", message: "Your profile information was updated successfully.", time: "3 days ago", read: true, type: "success" },
+  { id: "7", title: "Monetization Opportunity", message: "New premium ad placement available for top publishers.", time: "4 days ago", read: true, type: "warning" },
+  { id: "8", title: "Welcome to ContentFlow", message: "We're excited to have you! Explore the AI generator.", time: "1 week ago", read: true, type: "info" },
+];
+
+export const MOCK_ARTICLES = [
+  { id: "a1", title: "10 Best AI Tools for Business in 2026", excerpt: "Discover how AI is revolutionizing business operations...", category: "Technology", status: "published", clicks: 14200, revenue: 320.50, date: "2026-05-12" },
+  { id: "a2", title: "The Future of Remote Work", excerpt: "How asynchronous communication is changing the modern workspace.", category: "Business", status: "published", clicks: 8400, revenue: 195.00, date: "2026-05-10" },
+  { id: "a3", title: "Machine Learning for Beginners", excerpt: "A complete guide to understanding neural networks and basic AI concepts.", category: "Technology", status: "pending", clicks: 0, revenue: 0, date: "2026-05-28" },
+  { id: "a4", title: "SEO Optimization Strategies", excerpt: "Top strategies to improve your search engine rankings using AI.", category: "Marketing", status: "published", clicks: 5300, revenue: 110.25, date: "2026-04-15" },
+  { id: "a5", title: "Digital Nomad Lifestyle Tips", excerpt: "How to balance travel and work effectively across different time zones.", category: "Lifestyle", status: "draft", clicks: 0, revenue: 0, date: "2026-06-01" },
 ];
 
 export const MOCK_TESTIMONIALS = [

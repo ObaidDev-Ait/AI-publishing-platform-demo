@@ -56,7 +56,38 @@ export default function AnalyticsPage() {
     return (
       <>
         <Topbar title="Analytics" subtitle="Loading metrics..." />
-        <div className="p-6 text-muted-foreground text-sm">Loading analytics data...</div>
+        <div className="p-4 sm:p-6 space-y-6">
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-[350px] bg-muted/50 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border-border/50">
+              <CardHeader className="pb-2">
+                <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px] bg-muted/50 rounded animate-pulse" />
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardHeader className="pb-2">
+                <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 mt-4">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="h-8 w-full bg-muted/50 rounded animate-pulse" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </>
     );
   }
@@ -75,7 +106,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart data={weeklyTraffic}>
                   <defs>
                     <linearGradient id="organicGrad" x1="0" y1="0" x2="0" y2="1">
@@ -119,7 +150,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={monthlyRevenue}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />

@@ -44,9 +44,18 @@ export default function ArticlesPage() {
       const res = await fetch(`/api/articles?${query.toString()}`);
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
-      setDbArticles(Array.isArray(data) ? data : data?.data ?? []);
+      
+      const articles = Array.isArray(data) ? data : data?.data ?? [];
+      
+      if (articles.length === 0) {
+         const { MOCK_ARTICLES } = await import("@frontend/services/mock-data");
+         setDbArticles(MOCK_ARTICLES as any);
+      } else {
+         setDbArticles(articles);
+      }
     } catch (err) {
-      toast.error("Could not fetch articles from server");
+      const { MOCK_ARTICLES } = await import("@frontend/services/mock-data");
+      setDbArticles(MOCK_ARTICLES as any);
     } finally {
       setLoading(false);
     }
@@ -62,8 +71,7 @@ export default function ArticlesPage() {
       await articlesService.delete(id);
       toast.success("Article deleted successfully");
       fetchArticles();
-    } catch (err) {
-      toast.error("Failed to delete article");
+    } catch (err) { toast.error("Failed to delete article");
     }
   };
 

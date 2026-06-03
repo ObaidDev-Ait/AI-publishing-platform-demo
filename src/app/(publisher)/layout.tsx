@@ -22,8 +22,7 @@ export default function PublisherLayout({ children }: { children: React.ReactNod
           throw new Error("Unauthorized");
         }
         setCheckingAuth(false);
-      } catch (err) {
-        toast.error("Please login to access this page");
+      } catch (err) { toast.error("Please login to access this page");
         router.push("/login");
       }
     }

@@ -56,8 +56,7 @@ function AdminSidebar({
       } else {
         toast.error("Logout failed");
       }
-    } catch (err) {
-      toast.error("An error occurred during sign out");
+    } catch (err) { toast.error("An error occurred during sign out");
     }
   };
 

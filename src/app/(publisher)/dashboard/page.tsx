@@ -162,7 +162,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="pt-2">
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <AreaChart data={Array.isArray(monthlyRevenue) ? monthlyRevenue : []}>
                     <defs>
                       <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -205,7 +205,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="pt-2">
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={Array.isArray(monthlyRevenue) ? monthlyRevenue : []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />

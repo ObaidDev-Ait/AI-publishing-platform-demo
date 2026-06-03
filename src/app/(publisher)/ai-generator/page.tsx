@@ -102,8 +102,7 @@ export default function AIGeneratorPage() {
       setArticle(data.article);
       setGenerated(true);
       toast.success("Article generated successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "An error occurred during article generation");
+    } catch (err) { toast.error((err as Error).message || "An error occurred during article generation");
     } finally {
       setGenerating(false);
     }

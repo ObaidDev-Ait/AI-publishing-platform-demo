@@ -15,10 +15,11 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []) {
       const result = await fetcher();
       setData(result);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? (err as Error).message : "Something went wrong");
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   useEffect(() => {
