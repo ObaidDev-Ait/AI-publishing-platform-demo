@@ -142,6 +142,8 @@ export function Hero() {
                   src={demoVideoUrl}
                   controls
                   autoPlay
+                  muted
+                  playsInline
                   className="w-full h-full object-contain"
                 />
               </div>
