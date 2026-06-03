@@ -13,6 +13,10 @@ export async function getProfile(userId: string) {
         earnings: true,
         articles: true,
         joinDate: true,
+        avatarUrl: true,
+        bannerUrl: true,
+        socialLinks: true,
+        profileVisibility: true,
       },
     });
     if (profile) return profile;
@@ -30,10 +34,14 @@ export async function getProfile(userId: string) {
     earnings: 1200.0,
     articles: 25,
     joinDate: new Date(),
+    avatarUrl: null,
+    bannerUrl: null,
+    socialLinks: null,
+    profileVisibility: true,
   };
 }
 
-export async function updateProfile(userId: string, data: { name?: string }) {
+export async function updateProfile(userId: string, data: { name?: string; bio?: string; website?: string; avatarUrl?: string | null; bannerUrl?: string | null; socialLinks?: string | null; profileVisibility?: boolean }) {
   try {
     return await prisma.user.update({
       where: { id: userId },
@@ -47,6 +55,10 @@ export async function updateProfile(userId: string, data: { name?: string }) {
         earnings: true,
         articles: true,
         joinDate: true,
+        avatarUrl: true,
+        bannerUrl: true,
+        socialLinks: true,
+        profileVisibility: true,
       },
     });
   } catch (err) {
@@ -61,6 +73,10 @@ export async function updateProfile(userId: string, data: { name?: string }) {
       earnings: 1200.0,
       articles: 25,
       joinDate: new Date(),
+      avatarUrl: data.avatarUrl || null,
+      bannerUrl: data.bannerUrl || null,
+      socialLinks: data.socialLinks || null,
+      profileVisibility: data.profileVisibility ?? true,
     };
   }
 }

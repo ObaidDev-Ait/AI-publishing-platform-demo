@@ -10,6 +10,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboardPage() {
   const [adminStats, setAdminStats] = useState<Record<string, number>>({});
@@ -43,18 +44,18 @@ export default function AdminDashboardPage() {
             {[1, 2, 3, 4].map(i => (
               <Card key={i} className="border-border/50">
                 <CardContent className="p-5 space-y-3">
-                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                  <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-32" />
                 </CardContent>
               </Card>
             ))}
           </div>
           <Card className="border-border/50">
             <CardHeader>
-              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+              <Skeleton className="h-6 w-32" />
             </CardHeader>
             <CardContent>
-              <div className="h-[350px] bg-muted/50 rounded animate-pulse" />
+              <Skeleton className="h-[350px] w-full" />
             </CardContent>
           </Card>
         </div>

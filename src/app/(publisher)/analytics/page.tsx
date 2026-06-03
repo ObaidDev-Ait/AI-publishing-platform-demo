@@ -23,8 +23,17 @@ import {
   MOCK_WEEKLY_TRAFFIC, 
   MOCK_TRAFFIC_BY_COUNTRY 
 } from "@frontend/services/mock-data";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AnalyticsPage() {
+  const [dateRange, setDateRange] = useState("7days");
   const [monthlyRevenue, setMonthlyRevenue] = useState<
     { month: string; revenue: number; clicks: number }[]
   >([]);
@@ -59,29 +68,29 @@ export default function AnalyticsPage() {
         <div className="p-4 sm:p-6 space-y-6">
           <Card className="border-border/50">
             <CardHeader className="pb-2">
-              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+              <Skeleton className="h-6 w-32" />
             </CardHeader>
             <CardContent>
-              <div className="h-[350px] bg-muted/50 rounded animate-pulse" />
+              <Skeleton className="h-[350px] w-full" />
             </CardContent>
           </Card>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-border/50">
               <CardHeader className="pb-2">
-                <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+                <Skeleton className="h-6 w-32" />
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] bg-muted/50 rounded animate-pulse" />
+                <Skeleton className="h-[300px] w-full" />
               </CardContent>
             </Card>
             <Card className="border-border/50">
               <CardHeader className="pb-2">
-                <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+                <Skeleton className="h-6 w-32" />
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 mt-4">
                   {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="h-8 w-full bg-muted/50 rounded animate-pulse" />
+                    <Skeleton key={i} className="h-8 w-full" />
                   ))}
                 </div>
               </CardContent>
@@ -101,7 +110,17 @@ export default function AnalyticsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-heading">Traffic Overview</CardTitle>
-              <Badge variant="secondary" className="text-xs">Last 7 days</Badge>
+              <Select value={dateRange} onValueChange={(val) => setDateRange(val || "7days")}>
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Select range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7days">Last 7 days</SelectItem>
+                  <SelectItem value="30days">Last 30 days</SelectItem>
+                  <SelectItem value="90days">Last 3 months</SelectItem>
+                  <SelectItem value="12months">Last 12 months</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardHeader>
           <CardContent>

@@ -30,6 +30,9 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { MOCK_MONTHLY_REVENUE, MOCK_PUBLISHER_STATS, MOCK_RECENT_ARTICLES } from "@frontend/services/mock-data";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/shared/empty-state";
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<PublisherStats | null>(null);
   const [recentArticles, setRecentArticles] = useState<
@@ -69,12 +72,16 @@ export default function DashboardPage() {
             {[1, 2, 3, 4].map((i) => (
               <Card key={i} className="border-border/50">
                 <CardContent className="p-5 space-y-3">
-                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                  <div className="h-8 w-32 bg-muted rounded animate-pulse" />
-                  <div className="h-3 w-40 bg-muted rounded animate-pulse" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-32" />
+                  <Skeleton className="h-3 w-40" />
                 </CardContent>
               </Card>
             ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <Card className="border-border/50"><CardContent className="p-5"><Skeleton className="h-[300px] w-full" /></CardContent></Card>
+             <Card className="border-border/50"><CardContent className="p-5"><Skeleton className="h-[300px] w-full" /></CardContent></Card>
           </div>
         </div>
       </>
@@ -245,12 +252,13 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-3">
               {(Array.isArray(recentArticles) ? recentArticles : []).length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground">No articles generated yet.</p>
-                  <Link href="/ai-generator" className="text-xs text-violet hover:underline mt-1 inline-block">
-                    Create your first article now →
-                  </Link>
-                </div>
+                <EmptyState
+                  icon={FileText}
+                  title="No articles yet"
+                  description="You haven't generated any articles. Head over to the AI Generator to create your first piece of content."
+                  actionLabel="Create Article"
+                  onAction={() => window.location.href = "/ai-generator"}
+                />
               ) : (
                 (Array.isArray(recentArticles) ? recentArticles : []).slice(0, 5).map((article) => (
                   <div

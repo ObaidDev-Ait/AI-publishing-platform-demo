@@ -13,7 +13,7 @@ export async function requireAuth(): Promise<AuthContext | null> {
     const rawToken = cookieStore.get("session_id")?.value;
     console.log("[auth.middleware] Cookie 'session_id':", rawToken ? `present (${rawToken.substring(0, 8)}...)` : "MISSING");
 
-    const sessionId = validateSessionToken(rawToken);
+    const sessionId = await validateSessionToken(rawToken);
     if (!sessionId) {
       console.log("[auth.middleware] Session token validation failed — no valid session");
       return null;

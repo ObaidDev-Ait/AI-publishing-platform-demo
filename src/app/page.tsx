@@ -5,6 +5,8 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { Statistics } from "@/components/landing/statistics";
 import { Testimonials } from "@/components/landing/testimonials";
 import { Pricing } from "@/components/landing/pricing";
+import { FAQ } from "@/components/landing/faq";
+import { Contact } from "@/components/landing/contact";
 import { Footer } from "@/components/landing/footer";
 
 export default function LandingPage() {
@@ -17,6 +19,8 @@ export default function LandingPage() {
       <Statistics />
       <Testimonials />
       <Pricing />
+      <FAQ />
+      <Contact />
       <Footer />
     </main>
   );

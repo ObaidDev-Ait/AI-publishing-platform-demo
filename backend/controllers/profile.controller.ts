@@ -43,7 +43,7 @@ export async function getProfile() {
   }
 }
 
-export async function updateProfile(body: { name?: string }) {
+export async function updateProfile(body: { name?: string; bio?: string; website?: string; avatarUrl?: string | null; bannerUrl?: string | null; socialLinks?: string | null; profileVisibility?: boolean }) {
   try {
     const auth = await requireAuth();
     if (!auth) {

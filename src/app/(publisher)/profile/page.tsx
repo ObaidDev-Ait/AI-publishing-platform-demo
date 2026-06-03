@@ -16,7 +16,9 @@ import { toast } from "sonner";
 
 export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>({
@@ -50,9 +52,8 @@ export default function ProfilePage() {
           website: data.website || "https://contentflow.ai",
         });
         
-        if (data.avatarUrl) {
-          setAvatarUrl(data.avatarUrl);
-        }
+        if (data.avatarUrl) setAvatarUrl(data.avatarUrl);
+        if (data.bannerUrl) setBannerUrl(data.bannerUrl);
       } catch (err: unknown) {
         // Fallback to demo data entirely
         setProfile({
@@ -76,6 +77,10 @@ export default function ProfilePage() {
     fileInputRef.current?.click();
   };
 
+  const handleBannerUploadClick = () => {
+    bannerInputRef.current?.click();
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -93,6 +98,23 @@ export default function ProfilePage() {
     }
   };
 
+  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload an image file");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setBannerUrl(result);
+        toast.success("Banner updated! Click 'Save Changes' to persist.");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -105,6 +127,7 @@ export default function ProfilePage() {
           bio: profile.bio,
           website: profile.website,
           avatarUrl: avatarUrl,
+          bannerUrl: bannerUrl,
         }),
       });
       const data = await res.json();
@@ -112,7 +135,8 @@ export default function ProfilePage() {
         throw new Error(data.error || "Failed to save profile");
       }
       toast.success("Profile saved successfully!");
-    } catch (err) { toast.error((err as Error).message || "Failed to update profile");
+    } catch (err) { 
+      toast.error((err as Error).message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -140,14 +164,31 @@ export default function ProfilePage() {
       <Topbar title="Profile" subtitle="Manage your account settings" />
 
       <div className="p-4 sm:p-6 space-y-6 max-w-4xl">
-        {/* Profile picture */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle className="text-base font-heading">Profile Picture</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-6">
-              <div className="relative group">
+        {/* Profile Banner and Avatar */}
+        <Card className="border-border/50 overflow-hidden">
+          {/* Banner Area */}
+          <div 
+            className="h-32 sm:h-48 w-full relative bg-gradient-to-r from-violet/40 to-fuchsia-500/40 group bg-cover bg-center"
+            style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined}
+          >
+            <input
+              type="file"
+              ref={bannerInputRef}
+              onChange={handleBannerFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+              <Button variant="secondary" size="sm" onClick={handleBannerUploadClick}>
+                <Camera className="h-4 w-4 mr-2" />
+                Change Banner
+              </Button>
+            </div>
+          </div>
+          
+          <CardContent className="px-6 pb-6 pt-0 relative">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-12 sm:-mt-16 mb-4">
+              <div className="relative group shrink-0">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -155,11 +196,11 @@ export default function ProfilePage() {
                   accept="image/*"
                   className="hidden"
                 />
-                <Avatar className="h-20 w-20 border-4 border-violet/20">
+                <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background shadow-xl">
                   {avatarUrl ? (
-                    <AvatarImage src={avatarUrl} alt={profile.name} />
+                    <AvatarImage src={avatarUrl} alt={profile.name} className="object-cover" />
                   ) : (
-                    <AvatarFallback className="gradient-bg text-white text-2xl font-bold">
+                    <AvatarFallback className="gradient-bg text-white text-3xl font-bold">
                       {profile.name ? profile.name.split(" ").map((n: string) => n[0]).join("").toUpperCase() : "SC"}
                     </AvatarFallback>
                   )}
@@ -171,13 +212,13 @@ export default function ProfilePage() {
                   <Camera className="h-6 w-6 text-white" />
                 </div>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{profile.name}</p>
-                  <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[10px] py-0 px-1.5 font-semibold">
+              <div className="flex-1 pb-2">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="text-2xl font-bold font-heading">{profile.name}</h1>
+                  <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs py-0 px-2 font-semibold">
                     {profile.rank}
                   </Badge>
-                  <Badge className={`text-[10px] py-0 px-1.5 font-semibold border ${
+                  <Badge className={`text-xs py-0 px-2 font-semibold border ${
                     profile.role === "admin"
                       ? "bg-red-500/10 text-red-500 border-red-500/20"
                       : "bg-violet/10 text-violet border-violet/20"
@@ -185,16 +226,19 @@ export default function ProfilePage() {
                     {profile.role === "admin" ? "Administrator" : "Publisher"}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   {profile.joinDate ? `Member since ${new Date(profile.joinDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}` : ""}
                 </p>
-                <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                  <span>Earnings: <strong className="text-foreground">${(profile.earnings ?? 0).toLocaleString()}</strong></span>
-                  <span>Articles: <strong className="text-foreground">{profile.articles}</strong></span>
+                <div className="flex gap-6 text-sm">
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">Total Earnings</span>
+                    <span className="font-semibold text-foreground">${(profile.earnings ?? 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">Published Articles</span>
+                    <span className="font-semibold text-foreground">{profile.articles}</span>
+                  </div>
                 </div>
-                <Button variant="outline" size="sm" className="mt-3" onClick={handleUploadClick}>
-                  Upload Photo
-                </Button>
               </div>
             </div>
           </CardContent>

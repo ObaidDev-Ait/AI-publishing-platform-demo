@@ -18,9 +18,42 @@ import { toast } from "sonner";
 export default function AdminArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
 
+  const loadArticles = () => {
+    fetch("/api/admin/articles/pending")
+      .then((res) => res.json())
+      .then((data) => setArticles(Array.isArray(data) ? data : []))
+      .catch(() => toast.error("Failed to load articles"));
+  };
+
   useEffect(() => {
-    articlesService.adminList().then((data) => setArticles(Array.isArray(data) ? data : (data as any)?.data ?? [])).catch(() => toast.error("Failed to load articles"));
+    loadArticles();
   }, []);
+
+  const handleApprove = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/articles/${id}/approve`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      toast.success("Article approved successfully!");
+      loadArticles();
+    } catch {
+      toast.error("Failed to approve article");
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/articles/${id}/reject`, { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "Rejected by admin" })
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Article rejected successfully!");
+      loadArticles();
+    } catch {
+      toast.error("Failed to reject article");
+    }
+  };
 
   return (
     <>
@@ -57,72 +90,83 @@ export default function AdminArticlesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(Array.isArray(articles) ? articles : []).map((article) => (
-                    <TableRow key={article.id}>
-                      <TableCell>
-                        <p className="text-sm font-medium">{article.title}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[300px]">{article.excerpt}</p>
-                      </TableCell>
-                      <TableCell className="text-sm">{article.author}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">{article.category}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`text-xs ${
-                            article.status === "approved"
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                              : article.status === "pending"
-                              ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
-                              : "bg-red-500/10 text-red-600 dark:text-red-400"
-                          }`}
-                        >
-                          {article.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className="h-full gradient-bg rounded-full"
-                              style={{ width: `${article.seoScore}%` }}
-                            />
-                          </div>
-                          <span className="text-xs">{article.seoScore}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{article.date}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link href={`/admin/articles/${article.id}/review`}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <Eye className="h-3.5 w-3.5" />
-                            </Button>
-                          </Link>
-                          {article.status === "pending" && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-green-500 hover:text-green-600"
-                                onClick={() => toast.success("Article approved!")}
-                              >
-                                <CheckCircle className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-500 hover:text-red-600"
-                                onClick={() => toast.success("Article rejected")}
-                              >
-                                <XCircle className="h-3.5 w-3.5" />
-                              </Button>
-                            </>
-                          )}
+                  {(Array.isArray(articles) ? articles : []).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-48 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                          <CheckCircle className="h-8 w-8 text-muted-foreground" />
+                          <p className="text-muted-foreground">No articles pending review. You're all caught up!</p>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    (Array.isArray(articles) ? articles : []).map((article) => (
+                      <TableRow key={article.id}>
+                        <TableCell>
+                          <p className="text-sm font-medium">{article.title}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[300px]">{article.excerpt}</p>
+                        </TableCell>
+                        <TableCell className="text-sm">{article.author || "Unknown"}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">{article.category}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`text-xs ${
+                              article.status === "approved"
+                                ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                : article.status === "pending"
+                                ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                                : "bg-red-500/10 text-red-600 dark:text-red-400"
+                            }`}
+                          >
+                            {article.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className="h-full gradient-bg rounded-full"
+                                style={{ width: `${article.seoScore}%` }}
+                              />
+                            </div>
+                            <span className="text-xs">{article.seoScore}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{article.date}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Link href={`/admin/articles/${article.id}/review`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                            {article.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-green-500 hover:text-green-600"
+                                  onClick={() => handleApprove(article.id)}
+                                >
+                                  <CheckCircle className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-500 hover:text-red-600"
+                                  onClick={() => handleReject(article.id)}
+                                >
+                                  <XCircle className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { useEffect } from "react";
 import { configService } from "@frontend/services/config.service";
 import type { Language } from "@frontend/types";
@@ -41,6 +42,8 @@ export default function AIGeneratorPage() {
   const [progress, setProgress] = useState(0);
   const [progressText, setProgressText] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [generateFaq, setGenerateFaq] = useState(true);
+  const [suggestLinks, setSuggestLinks] = useState(true);
 
   // Form states
   const [topic, setTopic] = useState("10 Revolutionary AI Tools That Will Transform Your Business in 2026");
@@ -70,12 +73,29 @@ export default function AIGeneratorPage() {
     setProgressText("Analyzing topic...");
 
     try {
-      const progressSteps = [
-        { val: 25, txt: "Structuring article sections..." },
-        { val: 50, txt: "Writing content in target language..." },
-        { val: 75, txt: "Optimizing SEO keywords & density..." },
-        { val: 90, txt: "Generating meta tags & FAQs..." },
-      ];
+      const stepsConfig = {
+        english: [
+          { val: 25, txt: "Structuring article sections..." },
+          { val: 50, txt: "Writing content in target language..." },
+          { val: 75, txt: "Optimizing SEO keywords & density..." },
+          { val: 90, txt: "Generating meta tags & FAQs..." },
+        ],
+        french: [
+          { val: 25, txt: "Structuration des sections de l'article..." },
+          { val: 50, txt: "Rédaction du contenu dans la langue cible..." },
+          { val: 75, txt: "Optimisation des mots-clés et densité SEO..." },
+          { val: 90, txt: "Génération des balises meta et des FAQ..." },
+        ],
+        arabic: [
+          { val: 25, txt: "هيكلة أقسام المقال..." },
+          { val: 50, txt: "كتابة المحتوى باللغة المستهدفة..." },
+          { val: 75, txt: "تحسين الكلمات الرئيسية وكثافة تحسين محركات البحث..." },
+          { val: 90, txt: "إنشاء العلامات الوصفية والأسئلة الشائعة..." },
+        ]
+      };
+
+      const langKey = language as keyof typeof stepsConfig;
+      const progressSteps = stepsConfig[langKey] || stepsConfig.english;
 
       let step = 0;
       const progressTimer = setInterval(() => {
@@ -93,11 +113,13 @@ export default function AIGeneratorPage() {
         category,
         keywords,
         wordCount,
+        generateFaq,
+        suggestLinks,
       });
 
       clearInterval(progressTimer);
       setProgress(100);
-      setProgressText("Finalizing article...");
+      setProgressText(language === "arabic" ? "وضع اللمسات الأخيرة..." : language === "french" ? "Finalisation de l'article..." : "Finalizing article...");
       
       setArticle(data.article);
       setGenerated(true);
@@ -240,6 +262,23 @@ export default function AIGeneratorPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                <div className="pt-4 space-y-4 border-t border-border/50">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Generate FAQs</Label>
+                      <p className="text-xs text-muted-foreground">Add schema-optimized FAQs</p>
+                    </div>
+                    <Switch checked={generateFaq} onCheckedChange={setGenerateFaq} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Suggest Internal Links</Label>
+                      <p className="text-xs text-muted-foreground">Find relevant links from your site</p>
+                    </div>
+                    <Switch checked={suggestLinks} onCheckedChange={setSuggestLinks} />
+                  </div>
+                </div>
 
                 <Button
                   className="w-full h-11 gradient-bg text-white font-semibold shadow-lg shadow-violet/25"
@@ -308,18 +347,24 @@ export default function AIGeneratorPage() {
                   <Separator />
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      SEO-optimized headers structured
-                    </p>
-                    <p className="text-sm font-medium flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      Meta description optimized
-                    </p>
-                    <p className="text-sm font-medium flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      Plagiarism-free native conventions
-                    </p>
+                    {(language === "arabic" ? [
+                      "عناوين محسّنة لمحركات البحث ومنظمة",
+                      "الوصف التعريفي محسّن",
+                      "خالٍ من الانتحال مع مراعاة الأعراف اللغوية"
+                    ] : language === "french" ? [
+                      "En-têtes structurés et optimisés SEO",
+                      "Méta-description optimisée",
+                      "Conventions natives sans plagiat"
+                    ] : [
+                      "SEO-optimized headers structured",
+                      "Meta description optimized",
+                      "Plagiarism-free native conventions"
+                    ]).map((text, i) => (
+                      <p key={i} className={`text-sm font-medium flex items-center gap-2 ${selectedLangConfig.dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`} dir={selectedLangConfig.dir}>
+                        <CheckCircle className={`h-4 w-4 text-green-500 ${selectedLangConfig.dir === 'rtl' ? 'ml-2' : ''}`} />
+                        {text}
+                      </p>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -363,7 +408,9 @@ export default function AIGeneratorPage() {
                 <Card className="border-border/50">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-heading">Article Preview</CardTitle>
+                      <CardTitle className={`text-base font-heading ${selectedLangConfig.dir === 'rtl' ? 'text-right w-full' : ''}`} dir={selectedLangConfig.dir}>
+                        {language === "arabic" ? "معاينة المقال" : language === "french" ? "Aperçu de l'article" : "Article Preview"}
+                      </CardTitle>
                       <div className="flex gap-1.5 sm:gap-2">
                         <Button variant="outline" size="sm" className="h-8 px-2.5 sm:px-3 sm:h-9" onClick={() => {
                           navigator.clipboard.writeText(article.content);
@@ -404,14 +451,20 @@ export default function AIGeneratorPage() {
                 {/* Meta fields */}
                 <Card className="border-border/50">
                   <CardHeader>
-                    <CardTitle className="text-base font-heading">Meta Information</CardTitle>
+                    <CardTitle className={`text-base font-heading ${selectedLangConfig.dir === 'rtl' ? 'text-right' : ''}`} dir={selectedLangConfig.dir}>
+                      {language === "arabic" ? "المعلومات الوصفية (Meta)" : language === "french" ? "Informations Méta" : "Meta Information"}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label>Meta Title</Label>
-                      <Input defaultValue={article.metaTitle} className="h-11" />
-                      <p className="text-xs text-muted-foreground">
-                        {article.metaTitle.length}/60 characters
+                      <Input 
+                        defaultValue={article.metaTitle} 
+                        className={`h-11 ${selectedLangConfig.dir === 'rtl' ? 'text-right' : 'text-left'}`}
+                        dir={selectedLangConfig.dir}
+                      />
+                      <p className={`text-xs text-muted-foreground ${selectedLangConfig.dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+                        {article.metaTitle?.length || 0}/60 characters
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -419,9 +472,11 @@ export default function AIGeneratorPage() {
                       <Textarea
                         defaultValue={article.metaDescription}
                         rows={3}
+                        className={selectedLangConfig.dir === 'rtl' ? 'text-right' : 'text-left'}
+                        dir={selectedLangConfig.dir}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        {article.metaDescription.length}/160 characters
+                      <p className={`text-xs text-muted-foreground ${selectedLangConfig.dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+                        {article.metaDescription?.length || 0}/160 characters
                       </p>
                     </div>
                   </CardContent>
@@ -431,27 +486,54 @@ export default function AIGeneratorPage() {
                 {article.faqs && (Array.isArray(article.faqs) ? article.faqs : []).length > 0 && (
                   <Card className="border-border/50">
                     <CardHeader>
-                      <CardTitle className="text-base font-heading">Generated FAQs</CardTitle>
+                      <CardTitle className={`text-base font-heading ${selectedLangConfig.dir === 'rtl' ? 'text-right' : ''}`} dir={selectedLangConfig.dir}>
+                        {language === "arabic" ? "الأسئلة الشائعة المولّدة" : language === "french" ? "FAQ Générées" : "Generated FAQs"}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {(Array.isArray(article.faqs) ? article.faqs : []).map((faq: any, index: number) => (
                         <div key={index} className="border border-border/50 rounded-lg">
                           <button
-                            className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 transition-colors rounded-lg"
+                            className={`flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 transition-colors rounded-lg ${selectedLangConfig.dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`}
                             onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                            dir={selectedLangConfig.dir}
                           >
                             <span className="text-sm font-medium">{faq.question}</span>
                             {expandedFaq === index ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                              <ChevronUp className={`h-4 w-4 text-muted-foreground shrink-0 ${selectedLangConfig.dir === 'rtl' ? 'mr-2' : 'ml-2'}`} />
                             ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                              <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 ${selectedLangConfig.dir === 'rtl' ? 'mr-2' : 'ml-2'}`} />
                             )}
                           </button>
                           {expandedFaq === index && (
                             <div className="px-4 pb-4">
-                              <p className="text-sm text-muted-foreground leading-relaxed">{faq.answer}</p>
+                              <p 
+                                className={`text-sm text-muted-foreground leading-relaxed ${selectedLangConfig.dir === 'rtl' ? 'text-right' : 'text-left'}`}
+                                dir={selectedLangConfig.dir}
+                              >
+                                {faq.answer}
+                              </p>
                             </div>
                           )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Internal Links section */}
+                {article.suggestedLinks && (Array.isArray(article.suggestedLinks) ? article.suggestedLinks : []).length > 0 && (
+                  <Card className="border-border/50">
+                    <CardHeader>
+                      <CardTitle className="text-base font-heading">
+                        {language === "arabic" ? "الروابط الداخلية المقترحة" : language === "french" ? "Liens internes suggérés" : "Suggested Internal Links"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {(Array.isArray(article.suggestedLinks) ? article.suggestedLinks : []).map((link: any, index: number) => (
+                        <div key={index} className={`flex items-center justify-between p-3 border border-border/50 rounded-lg ${selectedLangConfig.dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`} dir={selectedLangConfig.dir}>
+                          <span className="text-sm font-medium">{link.text}</span>
+                          <span className="text-xs text-muted-foreground ml-2 truncate max-w-[200px]" dir="ltr">{link.url}</span>
                         </div>
                       ))}
                     </CardContent>

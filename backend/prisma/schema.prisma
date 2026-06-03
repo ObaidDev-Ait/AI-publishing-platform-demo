@@ -8,18 +8,80 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  password     String
-  role         String   @default("publisher")
-  rank         String   @default("Gold Publisher")
-  earnings     Float    @default(0.0)
-  articles     Int      @default(0)
-  clicks       Int      @default(0)
-  approvalRate Float    @default(0.0)
-  avatarUrl    String?
-  bio          String?
-  website      String?
-  joinDate     DateTime @default(now())
+  id                String         @id @default(uuid())
+  name              String
+  email             String         @unique
+  password          String
+  role              String         @default("publisher")
+  rank              String         @default("Gold Publisher")
+  earnings          Float          @default(0.0)
+  articles          Int            @default(0)
+  clicks            Int            @default(0)
+  approvalRate      Float          @default(0.0)
+  avatarUrl         String?
+  bannerUrl         String?
+  bio               String?
+  website           String?
+  socialLinks       String?
+  profileVisibility Boolean        @default(true)
+  joinDate          DateTime       @default(now())
+
+  Article           Article[]
+  Notification      Notification[]
+}
+
+model Article {
+  id              String   @id @default(uuid())
+  title           String
+  excerpt         String?
+  content         String
+  category        String
+  status          String   @default("DRAFT") // DRAFT, PENDING, APPROVED, REJECTED
+  seoScore        Int      @default(0)
+  keywords        String?  // JSON string
+  faqGenerated    Boolean  @default(false)
+  internalLinks   Boolean  @default(false)
+  
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id])
+  
+  reviewerId      String?
+  reviewDate      DateTime?
+  rejectionReason String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PlatformSettings {
+  id               String   @id @default("global")
+  siteName         String   @default("ContentFlow AI")
+  defaultLanguage  String   @default("english")
+  aiProvider       String   @default("openai")
+  aiModel          String   @default("gpt-4o")
+  payoutThreshold  Float    @default(50.0)
+  maintenanceMode  Boolean  @default(false)
+  smtpEnabled      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

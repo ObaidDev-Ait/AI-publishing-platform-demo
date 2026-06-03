@@ -8,6 +8,8 @@ export const aiService = {
     category: string;
     keywords: string[];
     wordCount?: number;
+    generateFaq?: boolean;
+    suggestLinks?: boolean;
   }) {
     return apiFetch<{ success: boolean; article: Record<string, unknown> }>(
       "/api/generate-article",

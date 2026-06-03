@@ -35,7 +35,7 @@ export function Hero() {
         </div>
 
         {/* Headline */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold font-heading tracking-tight leading-[1.1] mb-6 animate-fade-in-up stagger-1">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold font-heading tracking-tight leading-[1.1] mb-6 animate-fade-in-up stagger-1">
           Create, Publish & <br className="hidden sm:block" />
           <span className="gradient-text">Monetize Content</span>
           <br className="hidden sm:block" />
@@ -73,7 +73,7 @@ export function Hero() {
         {/* Social proof */}
         <div className="mt-16 animate-fade-in-up stagger-4">
           <p className="text-sm text-muted-foreground mb-4">Trusted by 2,000+ publishers worldwide</p>
-          <div className="flex items-center justify-center gap-8 opacity-40 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-500">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 opacity-40 grayscale hover:opacity-60 hover:grayscale-0 transition-all duration-500">
             {["TechCrunch", "Forbes", "Wired", "The Verge", "Mashable"].map((name) => (
               <span key={name} className="text-sm sm:text-base font-bold tracking-wider">
                 {name}
@@ -99,8 +99,8 @@ export function Hero() {
                   </div>
                 </div>
               </div>
-              <div className="p-6 sm:p-8 bg-gradient-to-br from-background to-muted/30">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-background to-muted/30">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6">
                   {[
                     { label: "Revenue", value: "$12,450", change: "+12.5%" },
                     { label: "Articles", value: "249", change: "+8.2%" },
