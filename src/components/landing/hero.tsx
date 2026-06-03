@@ -138,14 +138,16 @@ export function Hero() {
             </DialogHeader>
             {isOpen && (
               <div className="relative aspect-video w-full bg-black">
-                <video
-                  src={demoVideoUrl}
-                  controls
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-contain"
-                />
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/HK6y8DAPN_0?autoplay=1&rel=0"
+                  title="Demo Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
               </div>
             )}
           </DialogContent>

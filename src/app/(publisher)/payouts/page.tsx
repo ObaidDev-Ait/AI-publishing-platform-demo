@@ -6,6 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,6 +33,8 @@ import { toast } from "sonner";
 export default function PayoutsPage() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [earnings, setEarnings] = useState(0);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     Promise.all([payoutsService.list(), profileService.get()])
@@ -83,9 +96,70 @@ export default function PayoutsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-heading">Payment Method</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => toast.info("Payment settings opened")}>
-                Edit
-              </Button>
+              <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    Edit
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Edit Payment Method</DialogTitle>
+                    <DialogDescription>
+                      Update your bank details for payouts. Changes will apply to your next processing cycle.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right text-xs sm:text-sm">
+                        Name
+                      </Label>
+                      <Input
+                        id="name"
+                        defaultValue="John Doe"
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="iban" className="text-right text-xs sm:text-sm">
+                        IBAN / Account
+                      </Label>
+                      <Input
+                        id="iban"
+                        defaultValue="**** **** **** 4582"
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="swift" className="text-right text-xs sm:text-sm">
+                        SWIFT / BIC
+                      </Label>
+                      <Input
+                        id="swift"
+                        defaultValue="CHASUS33"
+                        className="col-span-3"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      type="submit" 
+                      className="gradient-bg text-white"
+                      disabled={isSaving}
+                      onClick={() => {
+                        setIsSaving(true);
+                        setTimeout(() => {
+                          setIsSaving(false);
+                          setIsEditModalOpen(false);
+                          toast.success("Payment method updated successfully!");
+                        }, 800);
+                      }}
+                    >
+                      {isSaving ? "Saving..." : "Save changes"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardHeader>
           <CardContent>
