@@ -22,6 +22,7 @@ export default function PublisherLayout({ children }: { children: React.ReactNod
         if (!res.ok || data.authenticated === false) {
           throw new Error("Unauthorized");
         }
+        // Both publishers and admins can access publisher routes
         setCheckingAuth(false);
       } catch (err) { toast.error("Please login to access this page");
         router.push("/login");

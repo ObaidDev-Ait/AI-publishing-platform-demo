@@ -1,23 +1,34 @@
 import { prisma } from "@backend/database/client";
 import { createSessionToken } from "@backend/utils/jwt";
 
-/** Ensures the demo user account exists in the database */
-async function ensureDemoUser() {
-  const email = "hamza@example.com";
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return existing;
-
-  console.log("[auth.service] Demo user not found — creating...");
-  return prisma.user.create({
-    data: {
+/** Ensures the demo accounts exist in the database */
+async function ensureDemoAccounts() {
+  const accounts = [
+    {
+      email: "admin@contentflow.ai",
+      name: "Admin",
+      password: "admin123",
+      role: "admin",
+      rank: "Administrator",
+    },
+    {
+      email: "publisher@contentflow.ai",
       name: "Hamza",
-      email,
-      password: "password123",
+      password: "publisher123",
+      role: "publisher",
       rank: "Gold Publisher",
       earnings: 1200.0,
-      articles: 25,
+      articles: 3,
     },
-  });
+  ];
+
+  for (const account of accounts) {
+    const existing = await prisma.user.findUnique({ where: { email: account.email } });
+    if (!existing) {
+      console.log(`[auth.service] Demo account not found — creating ${account.email}...`);
+      await prisma.user.create({ data: account });
+    }
+  }
 }
 
 export async function loginUser(email: string, password: string) {
@@ -27,12 +38,13 @@ export async function loginUser(email: string, password: string) {
 
   console.log("[auth.service] Attempting login for:", email);
 
-  // Auto-create demo user if it's the demo account
-  if (email === "hamza@example.com") {
+  // Auto-create demo accounts if needed
+  const demoEmails = ["admin@contentflow.ai", "publisher@contentflow.ai"];
+  if (demoEmails.includes(email)) {
     try {
-      await ensureDemoUser();
+      await ensureDemoAccounts();
     } catch (err) {
-      console.error("[auth.service] Failed to ensure demo user:", err);
+      console.error("[auth.service] Failed to ensure demo accounts:", err);
     }
   }
 
@@ -41,12 +53,19 @@ export async function loginUser(email: string, password: string) {
     user = await prisma.user.findUnique({ where: { email } });
   } catch (err) {
     console.error("[auth.service] Database error during login:", err);
-    // Vercel Fallback for Demo Account
-    if (email === "hamza@example.com" && password === "password123") {
+    // Vercel Fallback for Demo Accounts
+    if (email === "admin@contentflow.ai" && password === "admin123") {
+      const token = createSessionToken("demo-admin-id");
+      return {
+        token,
+        user: { id: "demo-admin-id", name: "Admin", email, role: "admin", rank: "Administrator" },
+      };
+    }
+    if (email === "publisher@contentflow.ai" && password === "publisher123") {
       const token = createSessionToken("demo-user-id");
       return {
         token,
-        user: { id: "demo-user-id", name: "Hamza", email, rank: "Gold Publisher" },
+        user: { id: "demo-user-id", name: "Hamza", email, role: "publisher", rank: "Gold Publisher" },
       };
     }
     return { error: "Database error", status: 500 as const };
@@ -54,11 +73,18 @@ export async function loginUser(email: string, password: string) {
 
   if (!user) {
     // Vercel Fallback if DB is empty
-    if (email === "hamza@example.com" && password === "password123") {
+    if (email === "admin@contentflow.ai" && password === "admin123") {
+      const token = createSessionToken("demo-admin-id");
+      return {
+        token,
+        user: { id: "demo-admin-id", name: "Admin", email, role: "admin", rank: "Administrator" },
+      };
+    }
+    if (email === "publisher@contentflow.ai" && password === "publisher123") {
       const token = createSessionToken("demo-user-id");
       return {
         token,
-        user: { id: "demo-user-id", name: "Hamza", email, rank: "Gold Publisher" },
+        user: { id: "demo-user-id", name: "Hamza", email, role: "publisher", rank: "Gold Publisher" },
       };
     }
     return { error: "Invalid email or password", status: 401 as const };
@@ -69,7 +95,7 @@ export async function loginUser(email: string, password: string) {
   }
 
   const token = createSessionToken(user.id);
-  console.log("[auth.service] Login SUCCESS — token created for user:", user.id);
+  console.log("[auth.service] Login SUCCESS — token created for user:", user.id, "role:", user.role);
 
   return {
     token,
@@ -77,6 +103,7 @@ export async function loginUser(email: string, password: string) {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
       rank: user.rank,
     },
   };
@@ -94,7 +121,7 @@ export async function registerUser(name: string, email: string, password: string
     }
 
     const user = await prisma.user.create({
-      data: { name, email, password },
+      data: { name, email, password, role: "publisher" },
     });
     console.log("[auth.service] Registration SUCCESS — user created:", user.id);
 
@@ -105,6 +132,7 @@ export async function registerUser(name: string, email: string, password: string
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
         rank: user.rank,
       },
     };
@@ -119,6 +147,7 @@ export async function registerUser(name: string, email: string, password: string
         id: fallbackId,
         name,
         email,
+        role: "publisher",
         rank: "New Publisher",
       },
     };

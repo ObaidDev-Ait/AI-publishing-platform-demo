@@ -7,6 +7,7 @@ const DEMO_PROFILE = {
   id: "demo-user",
   name: "Hamza",
   email: "hamza@example.com",
+  role: "publisher",
   rank: "Gold Publisher",
   earnings: 1200,
   articles: 25,

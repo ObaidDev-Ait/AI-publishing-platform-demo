@@ -4,6 +4,7 @@ import { validateSessionToken } from "@backend/utils/jwt";
 
 export type AuthContext = {
   userId: string;
+  role: string;
 };
 
 export async function requireAuth(): Promise<AuthContext | null> {
@@ -20,13 +21,13 @@ export async function requireAuth(): Promise<AuthContext | null> {
 
     if (sessionId === "demo-user-id" || sessionId.startsWith("new-user-")) {
       console.log("[auth.middleware] Fast-pathing Vercel fallback session for:", sessionId);
-      return { userId: sessionId };
+      return { userId: sessionId, role: "publisher" };
     }
 
     console.log("[auth.middleware] Looking up user with id:", sessionId);
     const user = await prisma.user.findUnique({
       where: { id: sessionId },
-      select: { id: true },
+      select: { id: true, role: true },
     });
 
     if (!user) {
@@ -34,8 +35,8 @@ export async function requireAuth(): Promise<AuthContext | null> {
       return null;
     }
 
-    console.log("[auth.middleware] Auth SUCCESS — userId:", user.id);
-    return { userId: user.id };
+    console.log("[auth.middleware] Auth SUCCESS — userId:", user.id, "role:", user.role);
+    return { userId: user.id, role: user.role };
   } catch (error) {
     console.error("[auth.middleware] requireAuth() threw an error:", error);
     return null;

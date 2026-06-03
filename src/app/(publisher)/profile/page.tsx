@@ -177,9 +177,16 @@ export default function ProfilePage() {
                   <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[10px] py-0 px-1.5 font-semibold">
                     {profile.rank}
                   </Badge>
+                  <Badge className={`text-[10px] py-0 px-1.5 font-semibold border ${
+                    profile.role === "admin"
+                      ? "bg-red-500/10 text-red-500 border-red-500/20"
+                      : "bg-violet/10 text-violet border-violet/20"
+                  }`}>
+                    {profile.role === "admin" ? "Administrator" : "Publisher"}
+                  </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {profile.joinDate ? `Publisher since ${new Date(profile.joinDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}` : ""}
+                  {profile.joinDate ? `Member since ${new Date(profile.joinDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}` : ""}
                 </p>
                 <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                   <span>Earnings: <strong className="text-foreground">${(profile.earnings ?? 0).toLocaleString()}</strong></span>

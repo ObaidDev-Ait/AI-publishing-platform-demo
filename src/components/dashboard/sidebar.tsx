@@ -18,6 +18,7 @@ import { Logo } from "@/components/shared/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 const navItems = [
@@ -39,7 +40,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle, onItemClick }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<{ name: string; avatarUrl: string | null } | null>(null);
+  const [user, setUser] = useState<{ name: string; avatarUrl: string | null; role: string } | null>(null);
 
   useEffect(() => {
     async function getProfile() {
@@ -47,7 +48,7 @@ export function Sidebar({ collapsed, onToggle, onItemClick }: SidebarProps) {
         const res = await fetch("/api/profile");
         const data = await res.json();
         if (res.ok && data.authenticated !== false) {
-          setUser({ name: data.name, avatarUrl: data.avatarUrl });
+          setUser({ name: data.name, avatarUrl: data.avatarUrl, role: data.role || "publisher" });
         }
       } catch (err) {
         console.error("Failed to load user info in Sidebar", err);
@@ -69,6 +70,11 @@ export function Sidebar({ collapsed, onToggle, onItemClick }: SidebarProps) {
     } catch (err) { toast.error("An error occurred during sign out");
     }
   };
+
+  const roleLabel = user?.role === "admin" ? "Administrator" : "Publisher";
+  const roleBadgeClass = user?.role === "admin"
+    ? "bg-red-500/10 text-red-500 border-red-500/20"
+    : "bg-violet/10 text-violet border-violet/20";
 
   return (
     <aside
@@ -124,8 +130,12 @@ export function Sidebar({ collapsed, onToggle, onItemClick }: SidebarProps) {
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.name || "Sarah Chen"}</p>
-              <p className="text-xs text-muted-foreground truncate">Publisher</p>
+              <p className="text-sm font-medium truncate">{user?.name || "User"}</p>
+              <div className="flex items-center gap-1.5">
+                <Badge className={`${roleBadgeClass} text-[10px] border py-0 px-1.5 font-semibold`}>
+                  {roleLabel}
+                </Badge>
+              </div>
             </div>
           )}
           {!collapsed && (

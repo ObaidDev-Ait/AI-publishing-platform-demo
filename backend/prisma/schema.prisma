@@ -12,6 +12,7 @@ model User {
   name         String
   email        String   @unique
   password     String
+  role         String   @default("publisher")
   rank         String   @default("Gold Publisher")
   earnings     Float    @default(0.0)
   articles     Int      @default(0)

@@ -7,18 +7,33 @@ async function main() {
 
   await prisma.user.deleteMany();
 
-  const user = await prisma.user.create({
+  const admin = await prisma.user.create({
+    data: {
+      name: "Admin",
+      email: "admin@contentflow.ai",
+      password: "admin123",
+      role: "admin",
+      rank: "Administrator",
+      earnings: 0,
+      articles: 0,
+    },
+  });
+
+  const publisher = await prisma.user.create({
     data: {
       name: "Hamza",
-      email: "hamza@example.com",
-      password: "password123",
+      email: "publisher@contentflow.ai",
+      password: "publisher123",
+      role: "publisher",
       rank: "Gold Publisher",
       earnings: 1200.0,
       articles: 3,
     },
   });
 
-  console.log(`Seeding complete. User: ${user.email}`);
+  console.log(`Seeding complete.`);
+  console.log(`  Admin:     ${admin.email}`);
+  console.log(`  Publisher:  ${publisher.email}`);
 }
 
 main()

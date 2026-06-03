@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -38,10 +38,12 @@ function AdminSidebar({
   collapsed,
   onToggle,
   onItemClick,
+  userName,
 }: {
   collapsed: boolean;
   onToggle: () => void;
   onItemClick?: () => void;
+  userName: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -59,6 +61,10 @@ function AdminSidebar({
     } catch (err) { toast.error("An error occurred during sign out");
     }
   };
+
+  const initials = userName
+    ? userName.split(" ").map((n: string) => n[0]).join("").toUpperCase()
+    : "AD";
 
   return (
     <aside
@@ -117,11 +123,11 @@ function AdminSidebar({
       <div className="p-3 border-t border-sidebar-border">
         <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
           <Avatar className="h-9 w-9 border-2 border-red-500/20 shrink-0">
-            <AvatarFallback className="bg-red-500 text-white text-xs font-semibold">JW</AvatarFallback>
+            <AvatarFallback className="bg-red-500 text-white text-xs font-semibold">{initials}</AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">James Wilson</p>
+              <p className="text-sm font-medium truncate">{userName || "Admin"}</p>
               <p className="text-xs text-muted-foreground truncate">Administrator</p>
             </div>
           )}
@@ -139,11 +145,48 @@ function AdminSidebar({
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [userName, setUserName] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/profile");
+        const data = await res.json();
+        if (!res.ok || data.authenticated === false) {
+          throw new Error("Unauthorized");
+        }
+        if (data.role !== "admin") {
+          toast.error("Access denied — admin only");
+          router.push("/dashboard");
+          return;
+        }
+        setUserName(data.name || "Admin");
+        setCheckingAuth(false);
+      } catch (err) {
+        toast.error("Please login to access this page");
+        router.push("/login");
+      }
+    }
+    checkAuth();
+  }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4 animate-pulse">
+          <div className="h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+        <p className="text-sm text-muted-foreground animate-pulse">Verifying admin access...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="hidden md:block">
-        <AdminSidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <AdminSidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} userName={userName} />
       </div>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -156,7 +199,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-[260px]">
           <SheetTitle className="sr-only">Admin Navigation</SheetTitle>
-          <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} onItemClick={() => setMobileOpen(false)} />
+          <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} onItemClick={() => setMobileOpen(false)} userName={userName} />
         </SheetContent>
       </Sheet>
 
