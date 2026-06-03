@@ -97,11 +97,13 @@ export default function PayoutsPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-heading">Payment Method</CardTitle>
               <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
-                </DialogTrigger>
+                <DialogTrigger
+                  render={
+                    <Button variant="outline" size="sm">
+                      Edit
+                    </Button>
+                  }
+                />
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
                     <DialogTitle>Edit Payment Method</DialogTitle>
