@@ -43,7 +43,6 @@ export default function AdminAnalyticsPage() {
         setAdminRevenueByMonth(rawRevenue.length > 0 ? rawRevenue : demoAdminRevenue);
         setContentCategories(rawCategories.length > 0 ? rawCategories : demoCategories);
       })
-      })
       .catch(() => toast.error("Failed to load analytics"))
       .finally(() => setLoading(false));
   }, []);
